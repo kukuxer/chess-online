@@ -5,6 +5,8 @@ import com.kukuxer.registration.domain.user.User;
 import com.kukuxer.registration.security.JwtRequest;
 import com.kukuxer.registration.security.JwtResponse;
 import com.kukuxer.registration.security.JwtTokenProvider;
+import com.kukuxer.registration.service.interfaces.AuthService;
+import com.kukuxer.registration.service.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,7 +15,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class AuthServiceImpl implements AuthService{
+public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;

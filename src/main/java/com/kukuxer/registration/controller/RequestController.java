@@ -1,23 +1,22 @@
 package com.kukuxer.registration.controller;
 
 
-import com.kukuxer.registration.domain.request.Request;
 import com.kukuxer.registration.domain.user.User;
-import com.kukuxer.registration.service.MatchService;
-import com.kukuxer.registration.service.RequestService;
-import com.kukuxer.registration.service.UserService;
+import com.kukuxer.registration.service.interfaces.MatchService;
+import com.kukuxer.registration.service.interfaces.RequestService;
+import com.kukuxer.registration.service.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
 @RequestMapping("/requests")
 @RequiredArgsConstructor
 public class RequestController {
@@ -31,13 +30,11 @@ public class RequestController {
     public ResponseEntity<String> sendRequest(@PathVariable("receiverId") long receiverId) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
-            System.out.println(username);
-            User userSender = userService.getByUsername(username);
+            User userSender = userService.getByUsername(authentication.getName());
             if (userSender == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid user cookie provided.");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid user  provided.");
             }
-            requestService.createRequest(userSender.getId(), receiverId);
+            requestService.createRequest(receiverId, userSender.getId());
             return ResponseEntity.ok("Request sent successfully.");
         } catch (Exception e) {
             e.printStackTrace();

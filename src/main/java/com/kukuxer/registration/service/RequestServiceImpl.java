@@ -5,6 +5,8 @@ import com.kukuxer.registration.domain.request.Status;
 import com.kukuxer.registration.domain.user.User;
 import com.kukuxer.registration.repository.RequestRepository;
 import com.kukuxer.registration.repository.UserRepository;
+import com.kukuxer.registration.service.interfaces.MatchService;
+import com.kukuxer.registration.service.interfaces.RequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;

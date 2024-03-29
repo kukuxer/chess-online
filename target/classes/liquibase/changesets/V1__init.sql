@@ -69,11 +69,3 @@ create table if not exists users_roles
     primary key (user_id, role),
     constraint fk_users_roles_users foreign key (user_id) references users (id) on delete cascade on update no action
 );
-CREATE TABLE IF NOT EXISTS users_matches
-(
-    user_id BIGINT NOT NULL,
-    match_id BIGINT NOT NULL,
-    PRIMARY KEY (user_id, match_id),
-    CONSTRAINT fk_users_matches_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE ON UPDATE NO ACTION,
-    CONSTRAINT fk_users_users_matches FOREIGN KEY (match_id) REFERENCES matches (id) ON DELETE CASCADE ON UPDATE NO ACTION
-);

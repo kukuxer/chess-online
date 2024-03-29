@@ -1,6 +1,7 @@
 package com.kukuxer.registration.domain.user;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kukuxer.registration.domain.match.Match;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -27,6 +28,7 @@ public class User {
     @Column(name = "email")
     private String email;
 
+    @JsonIgnore
     @Column(name = "password")
     private String password;
 
@@ -46,10 +48,10 @@ public class User {
     @Enumerated(value = EnumType.STRING)
     private Set<Role> roles;
 
-    @CollectionTable(name="users_matches")
-    @OneToMany
-    @JoinColumn(name="match_id")
-    private List<Match> matches;
+//    @CollectionTable(name="users_matches")
+//    @OneToMany
+//    @JoinColumn(name="match_id")
+//    private List<Match> matches;
 
 
 }

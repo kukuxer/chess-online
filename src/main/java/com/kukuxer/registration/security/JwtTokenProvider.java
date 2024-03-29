@@ -2,7 +2,7 @@ package com.kukuxer.registration.security;
 
 
 import com.kukuxer.registration.domain.user.User;
-import com.kukuxer.registration.service.UserService;
+import com.kukuxer.registration.service.interfaces.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;

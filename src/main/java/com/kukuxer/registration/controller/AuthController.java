@@ -1,13 +1,14 @@
 package com.kukuxer.registration.controller;
 
+import com.kukuxer.registration.domain.user.Role;
 import com.kukuxer.registration.domain.user.User;
 import com.kukuxer.registration.dto.UserDTO;
 import com.kukuxer.registration.dto.mappers.UserMapper;
 
 import com.kukuxer.registration.security.JwtRequest;
 import com.kukuxer.registration.security.JwtResponse;
-import com.kukuxer.registration.service.AuthService;
-import com.kukuxer.registration.service.UserService;
+import com.kukuxer.registration.service.interfaces.AuthService;
+import com.kukuxer.registration.service.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.validation.annotation.Validated;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Collections;
 
 @RestController
 @RequestMapping("/auth")
@@ -32,9 +35,9 @@ public class AuthController {
 
     @PostMapping("/register")
     public UserDTO register(@Validated @RequestBody UserDTO userDto){
-        User user = userMapper.toEntity(userDto);
-        User createdUser = user;
+        User createdUser = userMapper.toEntity(userDto);;
         createdUser.setEmail(userDto.getEmail());
+        createdUser.setRoles(Collections.singleton(Role.USER));
         userService.create(createdUser);
         return userMapper.toDto(createdUser);
     }

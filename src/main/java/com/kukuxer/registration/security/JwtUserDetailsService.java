@@ -3,7 +3,7 @@ package com.kukuxer.registration.security;
 
 
 import com.kukuxer.registration.domain.user.User;
-import com.kukuxer.registration.service.UserService;
+import com.kukuxer.registration.service.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

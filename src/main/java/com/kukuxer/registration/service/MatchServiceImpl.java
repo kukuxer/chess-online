@@ -7,11 +7,13 @@ import com.kukuxer.registration.domain.user.User;
 import com.kukuxer.registration.repository.MatchHistoryRepository;
 import com.kukuxer.registration.repository.MatchRepository;
 import com.kukuxer.registration.repository.UserRepository;
+import com.kukuxer.registration.service.interfaces.MatchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Random;
 
 @Service
@@ -21,6 +23,14 @@ public class MatchServiceImpl implements MatchService {
     private final MatchRepository matchRepository;
     private final MatchHistoryRepository matchHistoryRepository;
     private final UserRepository userRepository;
+
+
+
+    @Override
+    public List<Match> getAllMatchesByUser(User user) {
+        List<Match> matches =  matchRepository.findAllByReceiverOrSender(user);
+        return matches;
+    }
 
     @Override
     public ResponseEntity<?> createMatch(long senderId, long receiverId) {

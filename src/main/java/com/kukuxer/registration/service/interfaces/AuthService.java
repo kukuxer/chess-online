@@ -1,4 +1,4 @@
-package com.kukuxer.registration.service;
+package com.kukuxer.registration.service.interfaces;
 
 import com.kukuxer.registration.security.JwtRequest;
 import com.kukuxer.registration.security.JwtResponse;
