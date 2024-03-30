@@ -25,11 +25,9 @@ public class MatchServiceImpl implements MatchService {
     private final UserRepository userRepository;
 
 
-
     @Override
     public List<Match> getAllMatchesByUser(User user) {
-        List<Match> matches =  matchRepository.findAllByReceiverOrSender(user);
-        return matches;
+        return matchRepository.findAllByReceiverOrSender(user);
     }
 
     @Override
@@ -44,6 +42,7 @@ public class MatchServiceImpl implements MatchService {
         Match match = new Match();
         match.setSender(sender);
         match.setReceiver(receiver);
+        match.setStartTime(LocalDateTime.now());
         // randomly sets white player
         Random random = new Random();
         if (random.nextBoolean()) {
@@ -51,7 +50,7 @@ public class MatchServiceImpl implements MatchService {
         } else {
             match.setWhiteId(receiver);
         }
-        match.setStartTime(LocalDateTime.now());
+
         matchRepository.save(match);
 
         MatchHistory matchHistory = new MatchHistory();

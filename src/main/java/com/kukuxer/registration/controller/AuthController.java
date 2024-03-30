@@ -11,6 +11,8 @@ import com.kukuxer.registration.service.interfaces.AuthService;
 import com.kukuxer.registration.service.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,8 +38,6 @@ public class AuthController {
     @PostMapping("/register")
     public UserDTO register(@Validated @RequestBody UserDTO userDto){
         User createdUser = userMapper.toEntity(userDto);;
-        createdUser.setEmail(userDto.getEmail());
-        createdUser.setRoles(Collections.singleton(Role.USER));
         userService.create(createdUser);
         return userMapper.toDto(createdUser);
     }

@@ -7,6 +7,7 @@ import com.kukuxer.registration.repository.RequestRepository;
 import com.kukuxer.registration.repository.UserRepository;
 import com.kukuxer.registration.service.interfaces.MatchService;
 import com.kukuxer.registration.service.interfaces.RequestService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -22,14 +23,13 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public Request createRequest(Long receiverId, Long senderId) {
-        if (receiverId == senderId) throw new RuntimeException("mn");
+        if (receiverId.equals(senderId)) throw new RuntimeException("You cannot send request to yourself");
         User receiver = userRepository.findById(receiverId).orElseThrow(
                 () -> new RuntimeException("Receiver not found.")
         );
         User sender = userRepository.findById(senderId).orElseThrow(
                 () -> new RuntimeException("Sender not found")
         );
-
         Request request = Request.builder()
                 .sender(sender)
                 .receiver(receiver)
@@ -41,7 +41,6 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public ResponseEntity<?> acceptRequest(Long requestId, Long receiverId) {
-        // Retrieve the request from the repository
         Request request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("Request not found."));
 
@@ -67,16 +66,21 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
-    public ResponseEntity<?> rejectRequest(Long requestId, Long id) {
-        Request request = requestRepository.findById(requestId).orElseThrow(
-                () -> new RuntimeException("Request not found.")
-        );
-        if (!request.getReceiver().getId().equals(id) || request.getStatus() != (Status.PENDING)) {
-            throw new RuntimeException("Request is not ready to reject");
-        } else {
-            request.setStatus(Status.REJECTED);
-            requestRepository.save(request);
-            return ResponseEntity.ok("Request rejected successfully.");
+    public ResponseEntity<String> rejectRequest(Long requestId, Long userId) {
+        // Find the request by ID
+        Request request = requestRepository.findById(requestId)
+                .orElseThrow(() -> new EntityNotFoundException("Request not found with ID: " + requestId));
+
+        // Ensure that the user is authorized to reject the request
+        if (!request.getReceiver().getId().equals(userId) || request.getStatus() != Status.PENDING) {
+            throw new IllegalStateException("You cannot reject this request.");
         }
+
+        // Update the request status to REJECTED
+        request.setStatus(Status.REJECTED);
+        requestRepository.save(request);
+
+        // Return a response entity with a success message
+        return ResponseEntity.ok("Request rejected successfully.");
     }
 }

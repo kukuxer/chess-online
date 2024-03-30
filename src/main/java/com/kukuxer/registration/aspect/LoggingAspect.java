@@ -27,25 +27,29 @@ public class LoggingAspect {
             pointcut = "forControllerPackage()",
             returning = "result"
     )
-    public void afterControllerReturning(JoinPoint joinPoint, Object result){
+    public void afterControllerReturning(JoinPoint joinPoint, Object result) {
         String method = joinPoint.getSignature().toShortString();
         logger.info(green + "@After: calling method  " + method + reset);
         logger.info("The result: " + result);
     }
-    @Pointcut("execution(* com.kukuxer.registration.service.*.*.*(..))")
+
+    @Pointcut("execution(* com.kukuxer.registration.service.*.*(..))")
     private void forServicePackage() {
     }
+
     @AfterReturning(
             pointcut = "forServicePackage()",
             returning = "result"
     )
-    public void afterServiceReturning(JoinPoint joinPoint, Object result){
+
+    public void afterServiceReturning(JoinPoint joinPoint, Object result) {
         String method = joinPoint.getSignature().toShortString();
         if (result instanceof User) {
-             result = ((User) result).getUsername();
-                logger.info( red +"Match result for user " + result +reset);
-            }
-            logger.info(red +"The result: " + result + reset);
+            result = ((User) result).getUsername();
+            logger.info(red + "Match result for user " + result + reset);
+        } else {
+            logger.info(red + "The result: " + result + reset);
         }
+    }
 }
 
