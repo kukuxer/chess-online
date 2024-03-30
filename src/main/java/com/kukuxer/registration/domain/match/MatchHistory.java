@@ -2,6 +2,7 @@ package com.kukuxer.registration.domain.match;
 
 import com.kukuxer.registration.domain.user.User;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

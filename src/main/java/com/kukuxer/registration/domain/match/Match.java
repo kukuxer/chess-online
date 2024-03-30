@@ -43,6 +43,10 @@ public class Match {
     @Column(name = "end_time")
     private LocalDateTime endTime;
 
+    public User getBlack(){
+        return (receiver.equals(whiteId))?sender:receiver;
+    }
+
 
 
 }

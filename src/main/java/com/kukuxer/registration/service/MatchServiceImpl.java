@@ -1,6 +1,7 @@
 package com.kukuxer.registration.service;
 
 import com.google.gson.Gson;
+import com.kukuxer.registration.domain.match.Board;
 import com.kukuxer.registration.domain.match.Match;
 import com.kukuxer.registration.domain.match.MatchHistory;
 import com.kukuxer.registration.domain.user.User;
@@ -8,13 +9,14 @@ import com.kukuxer.registration.repository.MatchHistoryRepository;
 import com.kukuxer.registration.repository.MatchRepository;
 import com.kukuxer.registration.repository.UserRepository;
 import com.kukuxer.registration.service.interfaces.MatchService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -62,6 +64,66 @@ public class MatchServiceImpl implements MatchService {
 
     }
 
+    @Override
+    public Board getBoard(long matchId) {
+        Match match = getById(matchId);
+        MatchHistory matchHistory = matchHistoryRepository.findTopByMatchOrderByMoveNumberDesc(matchId);
+        User whitePlayer = match.getWhiteId();
+        User blackPlayer = match.getBlack();
+
+        return Board.builder()
+                .matchId(matchId)
+                .WhiteUsername(whitePlayer.getUsername())
+                .BlackUsername(blackPlayer.getUsername())
+                .lastMoveNumber(matchHistory.getMoveNumber())
+                .board(convertStringToIntMatrixChessboard(matchHistory.getBoard()))
+                .build();
+    }
+
+    @Override
+    public ResponseEntity<?> makeMove(long matchId, User user, List<Integer> from, List<Integer> to) {
+        if (from == null || to == null || from.size() != 2 || to.size() != 2) {
+            throw new RuntimeException("Incorrect format for 'from' or 'to' coordinates");
+        }
+
+
+        MatchHistory lastMove = matchHistoryRepository.findTopByMatchOrderByMoveNumberDesc(matchId);
+        if (lastMove == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Match not found");
+        }
+        MatchHistory newMove = new MatchHistory();
+        newMove.setMatch(lastMove.getMatch());
+        newMove.setMoveNumber(lastMove.getMoveNumber() + 1);
+        newMove.setMoveTimestamp(LocalDateTime.now());
+        newMove.setUser(user);
+
+        String lastBoardString = lastMove.getBoard();
+
+        int[][] lastBoard = convertStringToIntMatrixChessboard(lastBoardString);
+        // y,x
+        lastBoard[to.get(0)][to.get(1)] = lastBoard[from.get(0)][from.get(1)];
+        lastBoard[from.get(0)][from.get(1)] = 0;
+
+        newMove.setBoard(convertChessBoardToJson(lastBoard));
+
+        matchHistoryRepository.save(newMove);
+
+
+        return ResponseEntity.ok("Move successful");
+    }
+
+
+    @Override
+    public Match getById(long matchId) {
+        Optional<Match> matchOptional = matchRepository.findById(matchId);
+        if (matchOptional.isPresent()) {
+            return matchOptional.get();
+        } else {
+            throw new EntityNotFoundException("Match not found with ID: " + matchId);
+        }
+    }
+
+
     private String createBoard() {
 /*
         1: White Pawn
@@ -80,19 +142,52 @@ public class MatchServiceImpl implements MatchService {
         int[][] chessBoard = {
                 {-5, -3, -4, -6, -7, -4, -3, -5}, // Row 1 (Black Pieces)
                 {-1, -1, -1, -1, -1, -1, -1, -1}, // Row 2 (Black Pawns)
-                { 0,  0,  0,  0,  0,  0,  0,  0}, // Row 3 (Empty Squares)
-                { 0,  0,  0,  0,  0,  0,  0,  0}, // Row 4 (Empty Squares)
-                { 0,  0,  0,  0,  0,  0,  0,  0}, // Row 5 (Empty Squares)
-                { 0,  0,  0,  0,  0,  0,  0,  0}, // Row 6 (Empty Squares)
-                { 1,  1,  1,  1,  1,  1,  1,  1}, // Row 7 (White Pawns)
-                { 5,  3,  4,  6,  7,  4,  3,  5}  // Row 8 (White Pieces)
+                {0, 0, 0, 0, 0, 0, 0, 0}, // Row 3 (Empty Squares)
+                {0, 0, 0, 0, 0, 0, 0, 0}, // Row 4 (Empty Squares)
+                {0, 0, 0, 0, 0, 0, 0, 0}, // Row 5 (Empty Squares)
+                {0, 0, 0, 0, 0, 0, 0, 0}, // Row 6 (Empty Squares)
+                {1, 1, 1, 1, 1, 1, 1, 1}, // Row 7 (White Pawns)
+                {5, 3, 4, 6, 7, 4, 3, 5}  // Row 8 (White Pieces)
         };
         String json = convertChessBoardToJson(chessBoard);
         System.out.println(json);
         return json;
     }
+
     public static String convertChessBoardToJson(int[][] chessBoard) {
         Gson gson = new Gson();
         return gson.toJson(chessBoard);
+    }
+
+    public static int[][] convertStringToIntMatrixChessboard(String chessboardString) {
+        // Remove leading and trailing brackets
+        chessboardString = chessboardString.substring(2, chessboardString.length() - 2);
+
+        // Split the string into rows
+        String[] rows = chessboardString.split("\\],\\[");
+
+        // Initialize the chessboard array
+        int[][] chessboard = new int[rows.length][];
+
+        // Process each row
+        for (int i = 0; i < rows.length; i++) {
+            // Split the row into cells
+            String[] cells = rows[i].split(",");
+
+            // Initialize the row array
+            chessboard[i] = new int[cells.length];
+
+            // Process each cell
+            for (int j = 0; j < cells.length; j++) {
+                try {
+                    // Parse the cell string to integer
+                    chessboard[i][j] = Integer.parseInt(cells[j].trim());
+                } catch (NumberFormatException e) {
+                    System.err.println("Error parsing cell [" + i + "][" + j + "]: " + e.getMessage());
+                }
+            }
+        }
+
+        return chessboard;
     }
 }
