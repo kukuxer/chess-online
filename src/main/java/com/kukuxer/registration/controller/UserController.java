@@ -5,6 +5,7 @@ import com.kukuxer.registration.domain.match.Match;
 import com.kukuxer.registration.domain.user.User;
 import com.kukuxer.registration.service.interfaces.MatchService;
 import com.kukuxer.registration.service.interfaces.UserService;
+import io.sentry.Sentry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +40,7 @@ public class UserController {
             return ResponseEntity.ok(responseMessage);
         } else {
             // If it's not a UserDetails object, you might handle it differently based on your application logic
+            Sentry.captureMessage("Failed to get username");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unable to retrieve username");
         }
     }

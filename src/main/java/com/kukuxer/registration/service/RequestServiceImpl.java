@@ -7,10 +7,14 @@ import com.kukuxer.registration.repository.RequestRepository;
 import com.kukuxer.registration.repository.UserRepository;
 import com.kukuxer.registration.service.interfaces.MatchService;
 import com.kukuxer.registration.service.interfaces.RequestService;
+import io.sentry.Sentry;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.web.firewall.RequestRejectedException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -23,41 +27,63 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public Request createRequest(Long receiverId, Long senderId) {
-        if (receiverId.equals(senderId)) throw new RuntimeException("You cannot send request to yourself");
-        User receiver = userRepository.findById(receiverId).orElseThrow(
-                () -> new RuntimeException("Receiver not found.")
-        );
-        User sender = userRepository.findById(senderId).orElseThrow(
-                () -> new RuntimeException("Sender not found")
-        );
-        Request request = Request.builder()
-                .sender(sender)
-                .receiver(receiver)
-                .status(Status.PENDING)
-                .build();
-        requestRepository.save(request);
-        return request;
+        try {
+            if (receiverId.equals(senderId)) {
+                throw new IllegalArgumentException("You cannot send a request to yourself.");
+            }
+
+            User receiver = userRepository.findById(receiverId).orElseThrow(
+                    () -> new EntityNotFoundException("Receiver not found with ID: " + receiverId)
+            );
+
+            User sender = userRepository.findById(senderId).orElseThrow(
+                    () -> new EntityNotFoundException("Sender not found with ID: " + senderId)
+            );
+
+            Request request = Request.builder()
+                    .sender(sender)
+                    .receiver(receiver)
+                    .status(Status.PENDING)
+                    .build();
+            requestRepository.save(request);
+
+            return request;
+        } catch (IllegalArgumentException | EntityNotFoundException ex) {
+            Sentry.captureException(ex);
+            throw ex;
+        } catch (Exception ex) {
+            Sentry.captureException(ex);
+            throw new RuntimeException("Failed to create request due to an unexpected error.");
+        }
     }
 
     @Override
     public ResponseEntity<?> acceptRequest(Long requestId, Long receiverId) {
-        Request request = requestRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("Request not found."));
+        try {
+            Request request = requestRepository.findById(requestId)
+                    .orElseThrow(() -> new EntityNotFoundException("Request not found with ID: " + requestId));
 
-        // Ensure that the receiver ID matches and the request status is PENDING
-        if (!isAcceptableRequest(request, receiverId)) {
-            throw new RuntimeException("Request is not ready to accept");
+            // Ensure that the receiver ID matches and the request status is PENDING
+            if (!isAcceptableRequest(request, receiverId)) {
+                throw new IllegalStateException("Request is not ready to accept");
+            }
+
+            request.setStatus(Status.ACCEPTED);
+            requestRepository.save(request);
+
+            matchService.createMatch(request.getSender().getId(), receiverId);
+
+            return ResponseEntity.ok("Request accepted successfully.");
+        } catch (EntityNotFoundException e) {
+            Sentry.captureException(e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found.", e);
+        } catch (IllegalStateException e) {
+            Sentry.captureException(e);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request is not ready to accept", e);
+        } catch (Exception e) {
+            Sentry.captureException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred.", e);
         }
-
-        // Update the request status to ACCEPTED
-        request.setStatus(Status.ACCEPTED);
-        requestRepository.save(request);
-
-        // Create a match using the match service
-        matchService.createMatch(request.getSender().getId(), receiverId);
-
-        // Return a ResponseEntity indicating success
-        return ResponseEntity.ok("Request accepted successfully.");
     }
 
     private boolean isAcceptableRequest(Request request, Long receiverId) {
@@ -67,20 +93,27 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public ResponseEntity<String> rejectRequest(Long requestId, Long userId) {
-        // Find the request by ID
-        Request request = requestRepository.findById(requestId)
-                .orElseThrow(() -> new EntityNotFoundException("Request not found with ID: " + requestId));
+        try {
+            Request request = requestRepository.findById(requestId)
+                    .orElseThrow(() -> new EntityNotFoundException("Request not found with ID: " + requestId));
 
-        // Ensure that the user is authorized to reject the request
-        if (!request.getReceiver().getId().equals(userId) || request.getStatus() != Status.PENDING) {
-            throw new IllegalStateException("You cannot reject this request.");
+            if (!request.getReceiver().getId().equals(userId) || request.getStatus() != Status.PENDING) {
+                throw new RequestRejectedException("You cannot reject this request.");
+            }
+
+            request.setStatus(Status.REJECTED);
+            requestRepository.save(request);
+
+            return ResponseEntity.ok("Request rejected successfully.");
+        } catch (EntityNotFoundException e) {
+            Sentry.captureException(e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found.", e);
+        } catch (IllegalStateException e) {
+            Sentry.captureException(e);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,e.getMessage(), e);
+        } catch (Exception e) {
+            Sentry.captureException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred.", e);
         }
-
-        // Update the request status to REJECTED
-        request.setStatus(Status.REJECTED);
-        requestRepository.save(request);
-
-        // Return a response entity with a success message
-        return ResponseEntity.ok("Request rejected successfully.");
     }
 }

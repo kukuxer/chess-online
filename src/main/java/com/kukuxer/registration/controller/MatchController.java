@@ -5,6 +5,7 @@ import com.kukuxer.registration.domain.match.Match;
 import com.kukuxer.registration.domain.user.User;
 import com.kukuxer.registration.service.interfaces.MatchService;
 import com.kukuxer.registration.service.interfaces.UserService;
+import io.sentry.Sentry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +36,7 @@ public class MatchController {
 
             return matchService.getBoard(matchId);
         } catch (Exception e) {
-            e.printStackTrace();
+            Sentry.captureException(e);
             throw new RuntimeException("We cannot retrieve the board");
         }
     }
@@ -50,10 +51,10 @@ public class MatchController {
             if (user == null) {
                 throw new RuntimeException("Invalid user provided.");
             }
-            matchService.makeMove(matchId,user,from,to);
+            matchService.makeMove(matchId, user, from, to);
             return ResponseEntity.ok("You moved successfully");
         } catch (Exception e) {
-            e.printStackTrace();
+            Sentry.captureException(e);
             throw new RuntimeException("We cannot retrieve the board");
         }
     }

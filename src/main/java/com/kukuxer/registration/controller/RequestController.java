@@ -5,6 +5,7 @@ import com.kukuxer.registration.domain.user.User;
 import com.kukuxer.registration.service.interfaces.MatchService;
 import com.kukuxer.registration.service.interfaces.RequestService;
 import com.kukuxer.registration.service.interfaces.UserService;
+import io.sentry.Sentry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +41,7 @@ public class RequestController {
             return ResponseEntity.ok("Request sent successfully.");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Sentry.captureException(e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error sending request.");
         }
     }

@@ -9,6 +9,7 @@ import com.kukuxer.registration.repository.MatchHistoryRepository;
 import com.kukuxer.registration.repository.MatchRepository;
 import com.kukuxer.registration.repository.UserRepository;
 import com.kukuxer.registration.service.interfaces.MatchService;
+import io.sentry.Sentry;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,92 +35,107 @@ public class MatchServiceImpl implements MatchService {
 
     @Override
     public ResponseEntity<?> createMatch(long senderId, long receiverId) {
+        try {
+            User sender = userRepository.findById(senderId).orElseThrow(
+                    () -> new RuntimeException("Sender not found.")
+            );
+            User receiver = userRepository.findById(receiverId).orElseThrow(
+                    () -> new RuntimeException("Receiver not found.")
+            );
+            Match match = new Match();
+            match.setSender(sender);
+            match.setReceiver(receiver);
+            match.setStartTime(LocalDateTime.now());
+            // randomly sets white player
+            Random random = new Random();
+            if (random.nextBoolean()) {
+                match.setWhiteId(sender);
+            } else {
+                match.setWhiteId(receiver);
+            }
 
-        User sender = userRepository.findById(senderId).orElseThrow(
-                () -> new RuntimeException("Sender not found.")
-        );
-        User receiver = userRepository.findById(receiverId).orElseThrow(
-                () -> new RuntimeException("Receiver not found.")
-        );
-        Match match = new Match();
-        match.setSender(sender);
-        match.setReceiver(receiver);
-        match.setStartTime(LocalDateTime.now());
-        // randomly sets white player
-        Random random = new Random();
-        if (random.nextBoolean()) {
-            match.setWhiteId(sender);
-        } else {
-            match.setWhiteId(receiver);
+            matchRepository.save(match);
+
+            MatchHistory matchHistory = new MatchHistory();
+            matchHistory.setMatch(match);
+            matchHistory.setBoard(createBoard());
+            matchHistoryRepository.save(matchHistory);
+
+            return ResponseEntity.ok("Match created successfully.");
+        } catch (Exception e) {
+            // Log the exception to Sentry.io
+            Sentry.captureException(e);
+            // Return an appropriate error response
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to create match. Please try again later.");
         }
-
-        matchRepository.save(match);
-
-        MatchHistory matchHistory = new MatchHistory();
-        matchHistory.setMatch(match);
-        matchHistory.setBoard(createBoard());
-        matchHistoryRepository.save(matchHistory);
-
-        return ResponseEntity.ok("Match created successfully.");
-
     }
 
     @Override
     public Board getBoard(long matchId) {
-        Match match = getById(matchId);
-        MatchHistory matchHistory = matchHistoryRepository.findTopByMatchOrderByMoveNumberDesc(matchId);
-        User whitePlayer = match.getWhiteId();
-        User blackPlayer = match.getBlack();
+        try {
+            Match match = getById(matchId);
+            MatchHistory matchHistory = matchHistoryRepository.findTopByMatchOrderByMoveNumberDesc(matchId);
+            User whitePlayer = match.getWhiteId();
+            User blackPlayer = match.getBlack();
 
-        return Board.builder()
-                .matchId(matchId)
-                .WhiteUsername(whitePlayer.getUsername())
-                .BlackUsername(blackPlayer.getUsername())
-                .lastMoveNumber(matchHistory.getMoveNumber())
-                .board(convertStringToIntMatrixChessboard(matchHistory.getBoard()))
-                .build();
+            return Board.builder()
+                    .matchId(matchId)
+                    .WhiteUsername(whitePlayer.getUsername())
+                    .BlackUsername(blackPlayer.getUsername())
+                    .lastMoveNumber(matchHistory.getMoveNumber())
+                    .board(convertStringToIntMatrixChessboard(matchHistory.getBoard()))
+                    .build();
+        } catch (Exception e) {
+            Sentry.captureException(e);
+            throw new RuntimeException("Error occurred while retrieving the board.");
+        }
     }
 
     @Override
     public ResponseEntity<?> makeMove(long matchId, User user, List<Integer> from, List<Integer> to) {
-        if (from == null || to == null || from.size() != 2 || to.size() != 2) {
-            throw new RuntimeException("Incorrect format for 'from' or 'to' coordinates");
+        try {
+            if (from == null || to == null || from.size() != 2 || to.size() != 2) {
+                throw new RuntimeException("Incorrect format for 'from' or 'to' coordinates");
+            }
+
+            MatchHistory lastMove = matchHistoryRepository.findTopByMatchOrderByMoveNumberDesc(matchId);
+            if (lastMove == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Match not found");
+            }
+
+            MatchHistory newMove = new MatchHistory();
+            newMove.setMatch(lastMove.getMatch());
+            newMove.setMoveNumber(lastMove.getMoveNumber() + 1);
+            newMove.setMoveTimestamp(LocalDateTime.now());
+            newMove.setUser(user);
+
+            String lastBoardString = lastMove.getBoard();
+            int[][] lastBoard = convertStringToIntMatrixChessboard(lastBoardString);
+            // y,x
+            lastBoard[to.get(0)][to.get(1)] = lastBoard[from.get(0)][from.get(1)];
+            lastBoard[from.get(0)][from.get(1)] = 0;
+            newMove.setBoard(convertChessBoardToJson(lastBoard));
+
+            matchHistoryRepository.save(newMove);
+
+            return ResponseEntity.ok("Move successful");
+        } catch (Exception e) {
+            Sentry.captureException(e);
+            throw new RuntimeException("Error occurred while making the move.");
         }
-
-
-        MatchHistory lastMove = matchHistoryRepository.findTopByMatchOrderByMoveNumberDesc(matchId);
-        if (lastMove == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Match not found");
-        }
-        MatchHistory newMove = new MatchHistory();
-        newMove.setMatch(lastMove.getMatch());
-        newMove.setMoveNumber(lastMove.getMoveNumber() + 1);
-        newMove.setMoveTimestamp(LocalDateTime.now());
-        newMove.setUser(user);
-
-        String lastBoardString = lastMove.getBoard();
-
-        int[][] lastBoard = convertStringToIntMatrixChessboard(lastBoardString);
-        // y,x
-        lastBoard[to.get(0)][to.get(1)] = lastBoard[from.get(0)][from.get(1)];
-        lastBoard[from.get(0)][from.get(1)] = 0;
-
-        newMove.setBoard(convertChessBoardToJson(lastBoard));
-
-        matchHistoryRepository.save(newMove);
-
-
-        return ResponseEntity.ok("Move successful");
     }
+
 
 
     @Override
     public Match getById(long matchId) {
-        Optional<Match> matchOptional = matchRepository.findById(matchId);
-        if (matchOptional.isPresent()) {
-            return matchOptional.get();
-        } else {
-            throw new EntityNotFoundException("Match not found with ID: " + matchId);
+        try {
+            return matchRepository.findById(matchId)
+                    .orElseThrow(() -> new EntityNotFoundException("Match not found with ID: " + matchId));
+        } catch (EntityNotFoundException ex) {
+            Sentry.captureException(ex);
+            throw ex;
         }
     }
 

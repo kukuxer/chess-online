@@ -7,6 +7,7 @@ import com.kukuxer.registration.security.JwtResponse;
 import com.kukuxer.registration.security.JwtTokenProvider;
 import com.kukuxer.registration.service.interfaces.AuthService;
 import com.kukuxer.registration.service.interfaces.UserService;
+import io.sentry.Sentry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,7 +33,7 @@ public class AuthServiceImpl implements AuthService {
             jwtResponse.setRefreshToken(jwtTokenProvider.createRefreshToken(user.getId(), user.getUsername()));
             return jwtResponse;
         } catch (Exception e) {
-            e.printStackTrace();
+            Sentry.captureException(e);
             throw new AccessDeniedException("login error");
         }
     }

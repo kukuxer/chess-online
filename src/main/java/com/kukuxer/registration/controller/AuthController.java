@@ -9,6 +9,7 @@ import com.kukuxer.registration.security.JwtRequest;
 import com.kukuxer.registration.security.JwtResponse;
 import com.kukuxer.registration.service.interfaces.AuthService;
 import com.kukuxer.registration.service.interfaces.UserService;
+import io.sentry.Sentry;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.security.core.Authentication;
