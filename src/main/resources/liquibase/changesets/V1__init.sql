@@ -60,7 +60,8 @@ CREATE TABLE users_statistics (
                                   losses INT NOT NULL DEFAULT 0,
                                   draws INT NOT NULL DEFAULT 0,
                                   rating INT NOT NULL DEFAULT 1000,
-                                  CONSTRAINT fk_users_statistics_user_id FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+                                  confidence INT NOT NULL DEFAULT 40,
+     CONSTRAINT fk_users_statistics_user_id FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 create table if not exists users_roles
 (

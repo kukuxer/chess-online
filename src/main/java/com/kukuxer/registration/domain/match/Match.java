@@ -35,7 +35,7 @@ public class Match {
 
     @ManyToOne
     @JoinColumn(name = "white_user_id")
-    private User whiteId;
+    private User whiteUser;
 
     @Column(name = "start_time")
     private LocalDateTime startTime;
@@ -44,7 +44,7 @@ public class Match {
     private LocalDateTime endTime;
 
     public User getBlack(){
-        return (receiver.equals(whiteId))?sender:receiver;
+        return (receiver.equals(whiteUser))?sender:receiver;
     }
 
 

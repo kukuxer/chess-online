@@ -17,7 +17,7 @@ public interface MatchService {
 
     Board getBoard(long matchId);
 
-    ResponseEntity<?> makeMove(long matchId, User user, List<Integer> from, List<Integer> to);
+    ResponseEntity<?> makeMove(long matchId, User user, List<Integer> from, List<Integer> to,int finishResult);
 
     Match getById(long matchId);
 }

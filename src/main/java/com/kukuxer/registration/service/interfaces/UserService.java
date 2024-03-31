@@ -11,4 +11,6 @@ public interface UserService {
     User getById(Long userId);
 
     User getByUsername(String username);
+
+    void createStatistic(User user);
 }

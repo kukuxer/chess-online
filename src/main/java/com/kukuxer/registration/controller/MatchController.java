@@ -44,14 +44,15 @@ public class MatchController {
     @GetMapping("/move/{matchId}")
     public ResponseEntity<?> makeMove(@PathVariable("matchId") long matchId,
                                       @RequestHeader("from") List<Integer> from,
-                                      @RequestHeader("to") List<Integer> to) {
+                                      @RequestHeader("to") List<Integer> to,
+                                      @RequestHeader("finishResult") int finishResult) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             User user = userService.getByUsername(authentication.getName());
             if (user == null) {
                 throw new RuntimeException("Invalid user provided.");
             }
-            matchService.makeMove(matchId, user, from, to);
+            matchService.makeMove(matchId, user, from, to,finishResult);
             return ResponseEntity.ok("You moved successfully");
         } catch (Exception e) {
             Sentry.captureException(e);

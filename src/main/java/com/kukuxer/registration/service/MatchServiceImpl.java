@@ -5,9 +5,11 @@ import com.kukuxer.registration.domain.match.Board;
 import com.kukuxer.registration.domain.match.Match;
 import com.kukuxer.registration.domain.match.MatchHistory;
 import com.kukuxer.registration.domain.user.User;
+import com.kukuxer.registration.domain.user.UserStatistic;
 import com.kukuxer.registration.repository.MatchHistoryRepository;
 import com.kukuxer.registration.repository.MatchRepository;
 import com.kukuxer.registration.repository.UserRepository;
+import com.kukuxer.registration.repository.UserStatisticRepository;
 import com.kukuxer.registration.service.interfaces.MatchService;
 import io.sentry.Sentry;
 import jakarta.persistence.EntityNotFoundException;
@@ -26,6 +28,7 @@ public class MatchServiceImpl implements MatchService {
     private final MatchRepository matchRepository;
     private final MatchHistoryRepository matchHistoryRepository;
     private final UserRepository userRepository;
+    private final UserStatisticRepository userStatisticRepository;
 
 
     @Override
@@ -49,9 +52,9 @@ public class MatchServiceImpl implements MatchService {
             // randomly sets white player
             Random random = new Random();
             if (random.nextBoolean()) {
-                match.setWhiteId(sender);
+                match.setWhiteUser(sender);
             } else {
-                match.setWhiteId(receiver);
+                match.setWhiteUser(receiver);
             }
 
             matchRepository.save(match);
@@ -76,7 +79,7 @@ public class MatchServiceImpl implements MatchService {
         try {
             Match match = getById(matchId);
             MatchHistory matchHistory = matchHistoryRepository.findTopByMatchOrderByMoveNumberDesc(matchId);
-            User whitePlayer = match.getWhiteId();
+            User whitePlayer = match.getWhiteUser();
             User blackPlayer = match.getBlack();
 
             return Board.builder()
@@ -93,7 +96,10 @@ public class MatchServiceImpl implements MatchService {
     }
 
     @Override
-    public ResponseEntity<?> makeMove(long matchId, User user, List<Integer> from, List<Integer> to) {
+    public ResponseEntity<?> makeMove(long matchId,
+                                      User user,
+                                      List<Integer> from, List<Integer> to,
+                                      int finishResult) {
         try {
             if (from == null || to == null || from.size() != 2 || to.size() != 2) {
                 throw new RuntimeException("Incorrect format for 'from' or 'to' coordinates");
@@ -116,9 +122,20 @@ public class MatchServiceImpl implements MatchService {
             lastBoard[to.get(0)][to.get(1)] = lastBoard[from.get(0)][from.get(1)];
             lastBoard[from.get(0)][from.get(1)] = 0;
             newMove.setBoard(convertChessBoardToJson(lastBoard));
-
             matchHistoryRepository.save(newMove);
 
+            switch (finishResult) {
+                case 0:
+                    break;
+                case 1:
+                    win(matchId, user);
+                    break;
+                case 2:
+                    stalemate(matchId);
+                    break;
+                default:
+                    throw new RuntimeException("wrong finish result!");
+            }
             return ResponseEntity.ok("Move successful");
         } catch (Exception e) {
             Sentry.captureException(e);
@@ -126,6 +143,101 @@ public class MatchServiceImpl implements MatchService {
         }
     }
 
+    private void win(Long matchId, User winner) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new RuntimeException("Match not found with ID: " + matchId));
+        match.setWinner(winner);
+        match.setEndTime(LocalDateTime.now());
+
+        // Get loser and loser's statistic
+        User loser = match.getSender().equals(winner) ? match.getReceiver() : match.getSender();
+        UserStatistic loserStatistic = userStatisticRepository.findByUser(loser)
+                .orElseThrow(() -> new RuntimeException("User statistic not found with user: " + loser));
+        loserStatistic.setTotalGamesPlayed(loserStatistic.getTotalGamesPlayed() + 1);
+        loserStatistic.setLosses(loserStatistic.getLosses() + 1);
+
+        // Get winner's statistic and update
+        UserStatistic userStatistic = userStatisticRepository.findByUser(winner)
+                .orElseThrow(() -> new RuntimeException("User statistic not found with user: " + winner));
+        userStatistic.setTotalGamesPlayed(userStatistic.getTotalGamesPlayed() + 1);
+        userStatistic.setWins(userStatistic.getWins() + 1);
+
+        // Update winner's rating
+        int winnerRating = calculateNewRating(
+                userStatistic.getRating(),
+                loserStatistic.getRating(),
+                1,
+                updateConfidence(userStatistic.getTotalGamesPlayed(), userStatistic.getConfidence())
+        );
+
+
+        // Update loser's rating
+        int loserRating = calculateNewRating(
+                loserStatistic.getRating(),
+                userStatistic.getRating(),
+                0,
+                updateConfidence(loserStatistic.getTotalGamesPlayed(), loserStatistic.getConfidence())
+        );
+
+        // Save updated statistics
+        userStatistic.setRating(winnerRating);
+        userStatistic.setConfidence(updateConfidence(userStatistic.getTotalGamesPlayed(), userStatistic.getConfidence()));
+        userStatisticRepository.save(userStatistic);
+
+        loserStatistic.setRating(loserRating);
+        loserStatistic.setConfidence(updateConfidence(loserStatistic.getTotalGamesPlayed(), loserStatistic.getConfidence()));
+        userStatisticRepository.save(loserStatistic);
+    }
+
+
+    private void stalemate(Long matchId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new RuntimeException("Match not found with ID: " + matchId));
+
+        match.setEndTime(LocalDateTime.now());
+        matchRepository.save(match);
+
+        // Update statistics for the first player
+        User firstPlayer = match.getSender();
+        UserStatistic firstPlayerStatistic = userStatisticRepository.findByUser(firstPlayer)
+                .orElseThrow(() -> new RuntimeException("User statistic not found with user: " + firstPlayer));
+        firstPlayerStatistic.setTotalGamesPlayed(firstPlayerStatistic.getTotalGamesPlayed() + 1);
+        firstPlayerStatistic.setDraws(firstPlayerStatistic.getDraws() + 1);
+        firstPlayerStatistic.setRating(calculateNewRating(
+                firstPlayerStatistic.getRating(),
+                firstPlayerStatistic.getRating(),
+                0.5,
+                updateConfidence(
+                        firstPlayerStatistic.getTotalGamesPlayed(),
+                        firstPlayerStatistic.getConfidence())
+                )
+        );
+        firstPlayerStatistic.setConfidence(updateConfidence(
+                firstPlayerStatistic.getTotalGamesPlayed(),
+                firstPlayerStatistic.getConfidence())
+        );
+        userStatisticRepository.save(firstPlayerStatistic);
+
+        // Update statistics for the second player
+        User secondPlayer = match.getReceiver();
+        UserStatistic secondPlayerStatistic = userStatisticRepository.findByUser(secondPlayer)
+                .orElseThrow(() -> new RuntimeException("User statistic not found with user: " + secondPlayer));
+        secondPlayerStatistic.setTotalGamesPlayed(secondPlayerStatistic.getTotalGamesPlayed() + 1);
+        secondPlayerStatistic.setDraws(secondPlayerStatistic.getDraws() + 1);
+        secondPlayerStatistic.setRating(calculateNewRating(
+                secondPlayerStatistic.getRating(),
+                secondPlayerStatistic.getRating(),
+                        0.5,
+                        updateConfidence(secondPlayerStatistic.getTotalGamesPlayed(),
+                                secondPlayerStatistic.getConfidence())
+                )
+        );
+        secondPlayerStatistic.setConfidence(updateConfidence(
+                secondPlayerStatistic.getTotalGamesPlayed(),
+                secondPlayerStatistic.getConfidence())
+        );
+        userStatisticRepository.save(secondPlayerStatistic);
+    }
 
 
     @Override
@@ -203,7 +315,27 @@ public class MatchServiceImpl implements MatchService {
                 }
             }
         }
-
         return chessboard;
+    }
+
+    //If the player wins the game, the score would be 1.
+    //If the game ends in a draw, the score would be 0.5.
+    //If the player loses the game, the score would be 0.
+    public int calculateNewRating(int playerRating, int opponentRating, double score, double confidence) {
+        double expectedScore = calculateExpectedScore(playerRating, opponentRating);
+        double ratingChange = confidence * (score - expectedScore);
+        // Apply a floor and ceiling to rating change to prevent large swings
+        ratingChange = Math.max(-100, Math.min(100, ratingChange));
+        return playerRating + (int) ratingChange;
+    }
+
+    // Adjust the K-factor as needed based on your requirements
+
+    private double calculateExpectedScore(int playerRating, int opponentRating) {
+        return 1.0 / (1.0 + Math.pow(10.0, (opponentRating - playerRating) / 400.0));
+    }
+
+    public double  updateConfidence(int totalGamesPlayed, double currentConfidence) {
+        return currentConfidence / (totalGamesPlayed + 1);
     }
 }
