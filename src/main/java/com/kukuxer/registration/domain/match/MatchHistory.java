@@ -2,10 +2,7 @@ package com.kukuxer.registration.domain.match;
 
 import com.kukuxer.registration.domain.user.User;
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -13,7 +10,9 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "match_history")
+@Builder
 public class MatchHistory {
 
     @Id

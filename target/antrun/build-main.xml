@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="maven-antrun-" default="main">
   <target name="main">
-    <exec output="C:\Users\porku\AppData\Local\Temp\maven9217722196787385856cli" failOnError="false" executable="cmd.exe">
+    <exec output="C:\Users\MYPC~1\AppData\Local\Temp\maven1930710083647011025cli" failOnError="false" executable="cmd.exe">
       <arg value="/c" />
-      <arg value="C:\Users\porku\AppData\Local\Temp\.sentry-cli10386824995576114921.exe --log-level=error --version" />
+      <arg value="C:\Users\MYPC~1\AppData\Local\Temp\.sentry-cli10310160688383034409.exe --log-level=error --version" />
     </exec>
   </target>
 </project>
