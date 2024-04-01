@@ -2,6 +2,7 @@ package com.kukuxer.registration.controller;
 
 
 import com.kukuxer.registration.domain.match.Match;
+import com.kukuxer.registration.domain.user.FriendRequest;
 import com.kukuxer.registration.domain.user.User;
 import com.kukuxer.registration.service.interfaces.MatchService;
 import com.kukuxer.registration.service.interfaces.UserService;
@@ -13,10 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -52,4 +50,11 @@ public class UserController {
         return matchService.getAllMatchesByUser(user);
     }
 
+    @PostMapping("/sendFriendRequest/{userId}")
+    public FriendRequest sendFriendRequest(@PathVariable("userId")Long userId){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        Long senderId = userService.getByUsername(username).getId();
+        return userService.sendFriendRequest(userId, senderId);
+    }
 }
