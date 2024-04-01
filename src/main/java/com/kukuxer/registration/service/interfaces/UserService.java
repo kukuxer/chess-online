@@ -12,5 +12,7 @@ public interface UserService {
 
     User getByUsername(String username);
 
+    void updateUsersInGame(User user1, User user2);
+
     void createStatistic(User user);
 }

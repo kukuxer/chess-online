@@ -85,6 +85,16 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Failed to retrieve user. Please try again later.");
         }
     }
+    @Override
+    public void updateUsersInGame(User user1, User user2){
+        if(user1.isInGame()!=user2.isInGame()){
+            throw new RuntimeException("готовил пшеницу.");
+        }
+        user1.setInGame(!user1.isInGame());
+        user2.setInGame(!user2.isInGame());
+        userRepository.save(user1);
+        userRepository.save(user2);
+    }
 
     @Override
     @Transactional
@@ -96,7 +106,7 @@ public class UserServiceImpl implements UserService {
                 .losses(0)
                 .draws(0)
                 .rating(1000)
-                .confidence(40)
+                .confidence(115)
                 .build();
 
         try {

@@ -4,7 +4,9 @@ import com.kukuxer.registration.domain.match.Match;
 import com.kukuxer.registration.domain.user.User;
 import com.kukuxer.registration.domain.user.UserStatistic;
 import com.kukuxer.registration.repository.MatchRepository;
+import com.kukuxer.registration.repository.UserRepository;
 import com.kukuxer.registration.repository.UserStatisticRepository;
+import com.kukuxer.registration.service.interfaces.UserService;
 import com.kukuxer.registration.service.interfaces.UserStatistics;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,14 +19,16 @@ public class UserStatisticsImpl implements UserStatistics {
 
     private final MatchRepository matchRepository;
     private final UserStatisticRepository userStatisticRepository;
-
+    private final UserRepository userRepository;
+    private final UserService userService;
     @Override
     public void updateWinRating(Long matchId, User winner) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new RuntimeException("Match not found with ID: " + matchId));
         match.setWinner(winner);
         match.setEndTime(LocalDateTime.now());
-
+        userService.updateUsersInGame(match.getBlack(),match.getWhiteUser());
+        matchRepository.save(match);
         // Get loser and loser's statistic
         User loser = match.getSender().equals(winner) ? match.getReceiver() : match.getSender();
         UserStatistic loserStatistic = userStatisticRepository.findByUser(loser)
@@ -68,8 +72,8 @@ public class UserStatisticsImpl implements UserStatistics {
                 )
         );
         userStatisticRepository.save(loserStatistic);
-    }
 
+    }
     @Override
     public void updateStalemateRating(Long matchId) {
         Match match = matchRepository.findById(matchId)
