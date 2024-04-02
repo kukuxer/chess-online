@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 public class FriendRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="friend_request_id")
     private Long friendRequestId;
     private Long senderId;
     private Long receiverId;

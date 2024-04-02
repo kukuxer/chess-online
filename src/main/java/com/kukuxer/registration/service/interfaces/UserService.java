@@ -18,4 +18,8 @@ public interface UserService {
 
     FriendRequest sendFriendRequest(Long userId, Long senderId);
 
+    void acceptFriendRequest(Long friendRequestId);
+    void rejectFriendRequest(Long friendRequestId);
+    FriendRequest findFriendRequestById(Long friendRequestId);
+
 }

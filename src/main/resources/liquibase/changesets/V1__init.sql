@@ -79,8 +79,8 @@ create table if not exists users_friends
 );
 create table if not exists users_friends_requests
 (
-    friendReqeustId SERIAL primary key,
-    sender_id bignint not null,
+    friend_request_id SERIAL primary key,
+    sender_id bigint not null,
     receiver_id bigint not null,
     status varchar(255) not null DEFAULT 'PENDING'
 );

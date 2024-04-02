@@ -57,4 +57,31 @@ public class UserController {
         Long senderId = userService.getByUsername(username).getId();
         return userService.sendFriendRequest(userId, senderId);
     }
+
+    @PostMapping("/acceptFriendRequest/{requestId}")
+    public ResponseEntity<?> acceptFriendRequest(@PathVariable("requestId")Long requestId){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        Long userId = userService.getByUsername(currentUsername).getId();
+        FriendRequest friendRequest = userService.findFriendRequestById(requestId);
+        if(friendRequest.getSenderId().equals(userId)){
+            throw new RuntimeException("You can not accept your own friend request.");
+        }
+        userService.acceptFriendRequest(requestId);
+        return ResponseEntity.status(HttpStatus.OK).body("Successfully accepted the friend request.");
+    }
+    @PostMapping("/rejectFriendRequest/{requestId}")
+    public ResponseEntity<?> rejectFriendRequest(@PathVariable("requestId")Long requestId){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        Long userId = userService.getByUsername(currentUsername).getId();
+        FriendRequest friendRequest = userService.findFriendRequestById(requestId);
+        if(friendRequest.getSenderId().equals(userId)){
+            throw new RuntimeException("You can not reject your own friend request.");
+        }
+        userService.rejectFriendRequest(requestId);
+        return ResponseEntity.status(HttpStatus.OK).body("Successfully rejected the friend request.");
+    }
+
+
 }
