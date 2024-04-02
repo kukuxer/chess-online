@@ -48,6 +48,15 @@ public class User {
     @Enumerated(value = EnumType.STRING)
     private Set<Role> roles;
 
+
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "users_friends",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "friend_id")
+    )
+    private List<User> friends;
+
 //    @CollectionTable(name="users_matches")
 //    @OneToMany
 //    @JoinColumn(name="match_id")

@@ -1,8 +1,10 @@
 package com.kukuxer.registration.service;
 
+import com.kukuxer.registration.domain.user.FriendRequest;
 import com.kukuxer.registration.domain.user.Role;
 import com.kukuxer.registration.domain.user.User;
 import com.kukuxer.registration.domain.user.UserStatistic;
+import com.kukuxer.registration.repository.FriendRequestRepository;
 import com.kukuxer.registration.repository.UserRepository;
 import com.kukuxer.registration.repository.UserStatisticRepository;
 import com.kukuxer.registration.service.interfaces.UserService;
@@ -12,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +31,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserStatisticRepository userStatisticRepository;
+    private final FriendRequestRepository friendRequestRepository;
 
     @Override
     @Transactional
@@ -85,6 +90,16 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Failed to retrieve user. Please try again later.");
         }
     }
+    @Override
+    public void updateUsersInGame(User user1, User user2){
+        if(user1.isInGame()!=user2.isInGame()){
+            throw new RuntimeException("готовил пшеницу.");
+        }
+        user1.setInGame(!user1.isInGame());
+        user2.setInGame(!user2.isInGame());
+        userRepository.save(user1);
+        userRepository.save(user2);
+    }
 
     @Override
     @Transactional
@@ -96,7 +111,7 @@ public class UserServiceImpl implements UserService {
                 .losses(0)
                 .draws(0)
                 .rating(1000)
-                .confidence(40)
+                .confidence(115)
                 .build();
 
         try {
@@ -110,5 +125,49 @@ public class UserServiceImpl implements UserService {
             Sentry.captureException(e);
             throw new RuntimeException("Failed to create user statistic due to persistence error.");
         }
+    }
+
+    @Override
+    public FriendRequest sendFriendRequest(Long userId,Long senderId) {
+        if(userId.equals(senderId))throw new RuntimeException("You can not send a friend request to yourself.");
+        FriendRequest friendRequest = FriendRequest.builder()
+                .senderId(senderId)
+                .receiverId(userId)
+                .status("PENDING")
+                .build();
+        friendRequestRepository.save(friendRequest);
+        return friendRequest;
+    }
+
+    @Override
+    public void acceptFriendRequest(Long friendRequestId) {
+        FriendRequest friendRequest = findFriendRequestById(friendRequestId);
+        if(friendRequest.getStatus().equals("PENDING")) {
+            friendRequest.setStatus("ACCEPTED");
+        }
+        Long senderId = friendRequest.getSenderId();
+        Long receiverId = friendRequest.getReceiverId();
+        User sender = userRepository.findById(senderId).orElseThrow();
+        User receiver = userRepository.findById(receiverId).orElseThrow();
+        sender.getFriends().add(receiver);
+        receiver.getFriends().add(sender);
+        userRepository.save(sender);
+        userRepository.save(receiver);
+        friendRequestRepository.save(friendRequest);
+
+    }
+
+    @Override
+    public void rejectFriendRequest(Long friendRequestId) {
+        FriendRequest friendRequest = findFriendRequestById(friendRequestId);
+        friendRequest.setStatus("REJECTED");
+        friendRequestRepository.save(friendRequest);
+    }
+
+    @Override
+    public FriendRequest findFriendRequestById(Long friendRequestId) {
+        return friendRequestRepository.findById(friendRequestId).orElseThrow(
+                ()->new RuntimeException("Could not find friend request with id "+friendRequestId)
+        );
     }
 }

@@ -7,6 +7,7 @@ import com.kukuxer.registration.repository.RequestRepository;
 import com.kukuxer.registration.repository.UserRepository;
 import com.kukuxer.registration.service.interfaces.MatchService;
 import com.kukuxer.registration.service.interfaces.RequestService;
+import com.kukuxer.registration.service.interfaces.UserService;
 import io.sentry.Sentry;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ public class RequestServiceImpl implements RequestService {
     private final MatchService matchService;
     private final RequestRepository requestRepository;
     private final UserRepository userRepository;
-
+    private final UserService userService;
     @Override
     public Request createRequest(Long receiverId, Long senderId) {
         try {
@@ -67,8 +68,9 @@ public class RequestServiceImpl implements RequestService {
             if (!isAcceptableRequest(request, receiverId)) {
                 throw new IllegalStateException("Request is not ready to accept");
             }
-
+            userService.updateUsersInGame(request.getSender(),request.getReceiver());
             request.setStatus(Status.ACCEPTED);
+
             requestRepository.save(request);
 
             matchService.createMatch(request.getSender().getId(), receiverId);
