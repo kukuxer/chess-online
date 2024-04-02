@@ -1,16 +1,25 @@
 package com.kukuxer.registration.service.interfaces;
 
 
+import com.kukuxer.registration.domain.user.FriendRequest;
 import com.kukuxer.registration.domain.user.User;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface UserService {
-    @Transactional
     User create(User user);
 
     User getById(Long userId);
 
     User getByUsername(String username);
 
+    void updateUsersInGame(User user1, User user2);
+
     void createStatistic(User user);
+
+    FriendRequest sendFriendRequest(Long userId, Long senderId);
+
+    void acceptFriendRequest(Long friendRequestId);
+    void rejectFriendRequest(Long friendRequestId);
+    FriendRequest findFriendRequestById(Long friendRequestId);
+
 }

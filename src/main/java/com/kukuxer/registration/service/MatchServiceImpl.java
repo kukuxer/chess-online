@@ -99,16 +99,27 @@ public class MatchServiceImpl implements MatchService {
     @Override
     public ResponseEntity<?> makeMove(long matchId,
                                       User user,
-                                      List<Integer> from, List<Integer> to,
+                                     String board,
                                       int finishResult) {
         try {
-            if (from == null || to == null || from.size() != 2 || to.size() != 2) {
-                throw new RuntimeException("Incorrect format for 'from' or 'to' coordinates");
-            }
-
             MatchHistory lastMove = matchHistoryRepository.findTopByMatchOrderByMoveNumberDesc(matchId);
             if (lastMove == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Match not found");
+            }
+            int moveNumber =lastMove.getMoveNumber();
+            Match match = matchRepository.findById(matchId).orElseThrow();
+            User currentUser;
+            String color;
+            if(moveNumber%2==0){
+                currentUser= match.getWhiteUser();
+                color = "white";
+            }else{
+
+                currentUser=match.getBlack();
+                color = "black";
+            }
+            if(currentUser!=user){
+                throw new RuntimeException("you are not "+color);
             }
 
             MatchHistory newMove = MatchHistory.builder()
@@ -116,14 +127,8 @@ public class MatchServiceImpl implements MatchService {
                     .moveNumber(lastMove.getMoveNumber()+1)
                     .moveTimestamp(LocalDateTime.now())
                     .user(user)
+                    .board(board)
                     .build();
-
-            String lastBoardString = lastMove.getBoard();
-            int[][] lastBoard = convertStringToIntMatrixChessboard(lastBoardString);
-            // y,x
-            lastBoard[to.get(0)][to.get(1)] = lastBoard[from.get(0)][from.get(1)];
-            lastBoard[from.get(0)][from.get(1)] = 0;
-            newMove.setBoard(convertChessBoardToJson(lastBoard));
             matchHistoryRepository.save(newMove);
 
             switch (finishResult) {
@@ -139,14 +144,17 @@ public class MatchServiceImpl implements MatchService {
                     throw new RuntimeException("wrong finish result!");
             }
             return ResponseEntity.ok("Move successful");
-        } catch (Exception e) {
+        }
+        catch (RuntimeException e) {
+            Sentry.captureException(e);
+            throw new RuntimeException(e.getMessage());
+        }
+        catch (Exception e) {
             Sentry.captureException(e);
             throw new RuntimeException("Error occurred while making the move.");
         }
+
     }
-
-
-
 
     @Override
     public Match getById(long matchId) {

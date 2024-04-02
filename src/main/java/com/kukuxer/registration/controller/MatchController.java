@@ -1,5 +1,6 @@
 package com.kukuxer.registration.controller;
 
+import com.kukuxer.registration.domain.MoveRequest;
 import com.kukuxer.registration.domain.match.Board;
 import com.kukuxer.registration.domain.match.Match;
 import com.kukuxer.registration.domain.user.User;
@@ -41,22 +42,16 @@ public class MatchController {
         }
     }
 
-    @GetMapping("/move/{matchId}")
+    @PostMapping("/move/{matchId}")
     public ResponseEntity<?> makeMove(@PathVariable("matchId") long matchId,
-                                      @RequestHeader("from") List<Integer> from,
-                                      @RequestHeader("to") List<Integer> to,
-                                      @RequestHeader("finishResult") int finishResult) {
-        try {
+                                      @RequestBody MoveRequest moveRequest) {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             User user = userService.getByUsername(authentication.getName());
             if (user == null) {
                 throw new RuntimeException("Invalid user provided.");
             }
-            matchService.makeMove(matchId, user, from, to,finishResult);
+            matchService.makeMove(matchId, user, moveRequest.getBoard(), moveRequest.getFinishResult());
             return ResponseEntity.ok("You moved successfully");
-        } catch (Exception e) {
-            Sentry.captureException(e);
-            throw new RuntimeException("We cannot retrieve the board");
-        }
+
     }
 }
