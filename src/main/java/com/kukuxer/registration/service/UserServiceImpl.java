@@ -144,23 +144,28 @@ public class UserServiceImpl implements UserService {
         FriendRequest friendRequest = findFriendRequestById(friendRequestId);
         if(friendRequest.getStatus().equals("PENDING")) {
             friendRequest.setStatus("ACCEPTED");
+            Long senderId = friendRequest.getSenderId();
+            Long receiverId = friendRequest.getReceiverId();
+            User sender = userRepository.findById(senderId).orElseThrow();
+            User receiver = userRepository.findById(receiverId).orElseThrow();
+            sender.getFriends().add(receiver);
+            receiver.getFriends().add(sender);
+            userRepository.save(sender);
+            userRepository.save(receiver);
+            friendRequestRepository.save(friendRequest);
+        }else{
+            throw new RuntimeException("You can not accept non pending request.");
         }
-        Long senderId = friendRequest.getSenderId();
-        Long receiverId = friendRequest.getReceiverId();
-        User sender = userRepository.findById(senderId).orElseThrow();
-        User receiver = userRepository.findById(receiverId).orElseThrow();
-        sender.getFriends().add(receiver);
-        receiver.getFriends().add(sender);
-        userRepository.save(sender);
-        userRepository.save(receiver);
-        friendRequestRepository.save(friendRequest);
-
     }
 
     @Override
     public void rejectFriendRequest(Long friendRequestId) {
         FriendRequest friendRequest = findFriendRequestById(friendRequestId);
-        friendRequest.setStatus("REJECTED");
+        if(friendRequest.getStatus().equals("PENDING")) {
+            friendRequest.setStatus("REJECTED");
+        }else{
+            throw new RuntimeException("You can not reject non pending request.");
+        }
         friendRequestRepository.save(friendRequest);
     }
 
