@@ -6,4 +6,5 @@ public interface UserStatistics {
 
     void updateWinRating(Long matchId, User winner);
     void updateStalemateRating(Long matchId);
+
 }

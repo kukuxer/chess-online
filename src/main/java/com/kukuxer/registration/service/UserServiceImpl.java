@@ -11,6 +11,7 @@ import com.kukuxer.registration.service.interfaces.UserService;
 import io.sentry.Sentry;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -90,9 +92,10 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Failed to retrieve user. Please try again later.");
         }
     }
+
     @Override
-    public void updateUsersInGame(User user1, User user2){
-        if(user1.isInGame()!=user2.isInGame()){
+    public void updateUsersInGame(User user1, User user2) {
+        if (user1.isInGame() != user2.isInGame()) {
             throw new RuntimeException("готовил пшеницу.");
         }
         user1.setInGame(!user1.isInGame());
@@ -128,8 +131,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public FriendRequest sendFriendRequest(Long userId,Long senderId) {
-        if(userId.equals(senderId))throw new RuntimeException("You can not send a friend request to yourself.");
+    public FriendRequest sendFriendRequest(Long userId, Long senderId) {
+        if (userId.equals(senderId)) throw new RuntimeException("You can not send a friend request to yourself.");
+        boolean isPresent = friendRequestRepository.findFriendRequestBySenderIdAndReceiverId(senderId, userId)
+                .isPresent();
+        if (isPresent){
+            throw new RuntimeException("You cannot send request twice to one user");
+        }
+        List<FriendRequest> friendRequests = getAllBySenderId(userId);
+        for (FriendRequest fR : friendRequests){
+            if(fR.getReceiverId().equals(senderId)){
+                acceptFriendRequest(fR.getFriendRequestId());
+            }
+           return fR ;
+        }
         FriendRequest friendRequest = FriendRequest.builder()
                 .senderId(senderId)
                 .receiverId(userId)
@@ -142,7 +157,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void acceptFriendRequest(Long friendRequestId) {
         FriendRequest friendRequest = findFriendRequestById(friendRequestId);
-        if(friendRequest.getStatus().equals("PENDING")) {
+        if (friendRequest.getStatus().equals("PENDING")) {
             friendRequest.setStatus("ACCEPTED");
             Long senderId = friendRequest.getSenderId();
             Long receiverId = friendRequest.getReceiverId();
@@ -153,7 +168,7 @@ public class UserServiceImpl implements UserService {
             userRepository.save(sender);
             userRepository.save(receiver);
             friendRequestRepository.save(friendRequest);
-        }else{
+        } else {
             throw new RuntimeException("You can not accept non pending request.");
         }
     }
@@ -161,9 +176,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public void rejectFriendRequest(Long friendRequestId) {
         FriendRequest friendRequest = findFriendRequestById(friendRequestId);
-        if(friendRequest.getStatus().equals("PENDING")) {
+        if (friendRequest.getStatus().equals("PENDING")) {
             friendRequest.setStatus("REJECTED");
-        }else{
+        } else {
             throw new RuntimeException("You can not reject non pending request.");
         }
         friendRequestRepository.save(friendRequest);
@@ -172,7 +187,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public FriendRequest findFriendRequestById(Long friendRequestId) {
         return friendRequestRepository.findById(friendRequestId).orElseThrow(
-                ()->new RuntimeException("Could not find friend request with id "+friendRequestId)
+                () -> new RuntimeException("Could not find friend request with id " + friendRequestId)
         );
     }
+
+    @Override
+    public List<FriendRequest> getAllByReceiverId(Long receiverId) {
+        return friendRequestRepository.findAllByReceiverId(receiverId);
+    }
+
+    @Override
+    public List<FriendRequest> getAllBySenderId(Long senderId) {
+        return friendRequestRepository.findAllBySenderId(senderId);
+    }
+
 }

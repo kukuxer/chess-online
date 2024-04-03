@@ -5,6 +5,8 @@ import com.kukuxer.registration.domain.user.FriendRequest;
 import com.kukuxer.registration.domain.user.User;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 public interface UserService {
     User create(User user);
 
@@ -21,5 +23,7 @@ public interface UserService {
     void acceptFriendRequest(Long friendRequestId);
     void rejectFriendRequest(Long friendRequestId);
     FriendRequest findFriendRequestById(Long friendRequestId);
+    List<FriendRequest> getAllByReceiverId(Long receiverId);
+    List<FriendRequest> getAllBySenderId(Long senderId);
 
 }
