@@ -84,3 +84,14 @@ create table if not exists users_friends_requests
     receiver_id bigint not null,
     status varchar(255) not null DEFAULT 'PENDING'
 );
+create table if not exists search_request(
+    search_request_id bigint not null,
+    sender_id bigint not null,
+    min_opponent_rating int not null ,
+    max_opponent_rating int not null ,
+    is_waiting boolean,
+    created_at  timestamp DEFAULT current_timestamp,
+
+
+    CONSTRAINT fk_search_requests_sender_id FOREIGN KEY (sender_id) REFERENCES users (id)
+)

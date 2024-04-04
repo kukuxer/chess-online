@@ -1,9 +1,11 @@
 package com.kukuxer.registration.controller;
 
 
+import com.kukuxer.registration.domain.request.SearchRequest;
 import com.kukuxer.registration.domain.user.User;
 import com.kukuxer.registration.service.interfaces.MatchService;
 import com.kukuxer.registration.service.interfaces.RequestService;
+import com.kukuxer.registration.service.interfaces.SearchService;
 import com.kukuxer.registration.service.interfaces.UserService;
 import io.sentry.Sentry;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +26,22 @@ public class RequestController {
 
     private final UserService userService;
     private final RequestService requestService;
-    private final MatchService matchService;
+    private final SearchService searchService;
+
+
+    @PostMapping("/search")
+    public ResponseEntity<String> searchSomeoneToPlay() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User userSender = userService.getByUsername(authentication.getName());
+        SearchRequest searchRequest = searchService.checkIfSomeoneWaitingForMe(userSender.getId());
+        if (searchRequest != null) {
+            searchService.acceptRequest(userSender.getId(), searchRequest.getId());
+            return ResponseEntity.ok("You found match!");
+        } else {
+            searchService.createRequest(userSender.getId());
+            return ResponseEntity.ok("Looking for someone to play");
+        }
+    }
 
 
     @PostMapping("/send/{receiverId}")
@@ -55,14 +72,15 @@ public class RequestController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid user provided.");
         }
 
-        requestService.acceptRequest(requestId,userReceiver.getId());
+        requestService.acceptRequest(requestId, userReceiver.getId());
         return ResponseEntity.ok("Request accept successfully.");
     }
+
     @PostMapping("/reject/{requestId}")
     public ResponseEntity<String> rejectRequest(@PathVariable("requestId") long requestId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User user = userService.getByUsername(authentication.getName());
-        requestService.rejectRequest(requestId,user.getId());
+        requestService.rejectRequest(requestId, user.getId());
         return ResponseEntity.ok("Request rejected successfully.");
     }
 }
