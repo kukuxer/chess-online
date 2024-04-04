@@ -130,6 +130,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public FriendRequest sendFriendRequest(Long userId,Long senderId) {
         if(userId.equals(senderId))throw new RuntimeException("You can not send a friend request to yourself.");
+        boolean isPresent = friendRequestRepository.findFriendRequestBySenderIdAndReceiverId(senderId,userId).isPresent();
+        if(isPresent){
+            throw new RuntimeException("You cannot send request twice to one user.");
+        }
         FriendRequest friendRequest = FriendRequest.builder()
                 .senderId(senderId)
                 .receiverId(userId)
