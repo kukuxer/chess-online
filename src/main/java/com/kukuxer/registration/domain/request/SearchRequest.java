@@ -30,7 +30,7 @@ public class SearchRequest {
     @Column(name = "max_opponent_rating")
     private int maxRating;
     @Column(name = "is_waiting")
-    private boolean waiting;
+    private boolean isWaiting;
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 }

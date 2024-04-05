@@ -101,13 +101,16 @@ public class MatchServiceImpl implements MatchService {
                                       User user,
                                      String board,
                                       int finishResult) {
+        Match match = matchRepository.findById(matchId).orElseThrow();
+        if(match.getWinner()!=null){
+            throw new RuntimeException("Match is finished.");
+        }
         try {
             MatchHistory lastMove = matchHistoryRepository.findTopByMatchOrderByMoveNumberDesc(matchId);
             if (lastMove == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Match not found");
             }
             int moveNumber =lastMove.getMoveNumber();
-            Match match = matchRepository.findById(matchId).orElseThrow();
             User currentUser;
             String color;
             if(moveNumber%2==0){

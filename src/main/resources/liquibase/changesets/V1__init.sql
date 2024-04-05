@@ -79,10 +79,11 @@ create table if not exists users_friends
 );
 create table if not exists users_friends_requests
 (
-    friend_request_id SERIAL primary key,
+    friend_request_id SERIAL NOT NULL,
     sender_id bigint not null,
     receiver_id bigint not null,
-    status varchar(255) not null DEFAULT 'PENDING'
+    status varchar(255) not null DEFAULT 'PENDING',
+    PRIMARY KEY(friend_request_id)
 );
 create table if not exists search_request(
     id uuid not null,
@@ -91,6 +92,6 @@ create table if not exists search_request(
     max_opponent_rating int not null ,
     is_waiting boolean,
     created_at  timestamp DEFAULT current_timestamp,
-
+    PRIMARY KEY(id),
     CONSTRAINT fk_search_requests_sender_id FOREIGN KEY (sender_id) REFERENCES users (id)
 )
