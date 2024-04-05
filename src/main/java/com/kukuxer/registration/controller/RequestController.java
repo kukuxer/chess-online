@@ -34,12 +34,12 @@ public class RequestController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User userSender = userService.getByUsername(authentication.getName());
         SearchRequest searchRequest = searchService.checkIfSomeoneWaitingForMe(userSender.getId());
-        if (searchRequest != null) {
-            searchService.acceptRequest(userSender.getId(), searchRequest.getId());
-            return ResponseEntity.ok("You found match!");
-        } else {
+        if (searchRequest == null) {
             searchService.createRequest(userSender.getId());
             return ResponseEntity.ok("Looking for someone to play");
+        } else {
+            searchService.acceptRequest(userSender.getId(), searchRequest.getId());
+            return ResponseEntity.ok("You found match!");
         }
     }
 

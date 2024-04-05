@@ -12,4 +12,6 @@ public interface SearchService {
     void acceptRequest(Long userId, UUID SearchRequestId);
 
     void createRequest(Long userId);
+
+    void isPlayingRightNow(Long userId);
 }

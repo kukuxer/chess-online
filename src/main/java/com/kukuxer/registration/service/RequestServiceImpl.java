@@ -7,6 +7,7 @@ import com.kukuxer.registration.repository.RequestRepository;
 import com.kukuxer.registration.repository.UserRepository;
 import com.kukuxer.registration.service.interfaces.MatchService;
 import com.kukuxer.registration.service.interfaces.RequestService;
+import com.kukuxer.registration.service.interfaces.SearchService;
 import com.kukuxer.registration.service.interfaces.UserService;
 import io.sentry.Sentry;
 import jakarta.persistence.EntityNotFoundException;
@@ -26,8 +27,10 @@ public class RequestServiceImpl implements RequestService {
     private final RequestRepository requestRepository;
     private final UserRepository userRepository;
     private final UserService userService;
+    private final SearchService searchService;
     @Override
     public Request createRequest(Long receiverId, Long senderId) {
+        searchService.isPlayingRightNow(senderId);
         try {
             if (receiverId.equals(senderId)) {
                 throw new IllegalArgumentException("You cannot send a request to yourself.");
@@ -60,6 +63,7 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public ResponseEntity<?> acceptRequest(Long requestId, Long receiverId) {
+        searchService.isPlayingRightNow(receiverId);
         try {
             Request request = requestRepository.findById(requestId)
                     .orElseThrow(() -> new EntityNotFoundException("Request not found with ID: " + requestId));
@@ -68,6 +72,7 @@ public class RequestServiceImpl implements RequestService {
             if (!isAcceptableRequest(request, receiverId)) {
                 throw new IllegalStateException("Request is not ready to accept");
             }
+            searchService.isPlayingRightNow(request.getSender().getId());
             userService.updateUsersInGame(request.getSender(),request.getReceiver());
             request.setStatus(Status.ACCEPTED);
 

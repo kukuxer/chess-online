@@ -25,8 +25,12 @@ public class SearchRequest {
 
     @ManyToOne
     private User sender;
+    @Column(name = "min_opponent_rating")
     private int minRating;
+    @Column(name = "max_opponent_rating")
     private int maxRating;
-    private boolean waiting;
+    @Column(name = "is_waiting")
+    private boolean isWaiting;
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 }
