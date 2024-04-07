@@ -10,5 +10,7 @@ public interface RequestService {
 
     ResponseEntity<?> acceptRequest(Long requestId, Long userId);
 
+    boolean isAcceptableRequest(Request request, Long receiverId);
+
     ResponseEntity<?> rejectRequest(Long requestId, Long id);
 }

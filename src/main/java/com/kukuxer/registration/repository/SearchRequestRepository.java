@@ -17,4 +17,5 @@ public interface SearchRequestRepository extends JpaRepository<SearchRequest, UU
     Optional<SearchRequest> findBySenderIdAndIsWaiting(Long sender_id, boolean isWaiting);
 
 
+
 }

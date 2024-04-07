@@ -19,5 +19,10 @@ public interface MatchService {
 
     ResponseEntity<?> makeMove(long matchId, User user, String board,int finishResult);
 
+    User getOpponent(long userId);
+
     Match getById(long matchId);
+
+
+    boolean isInTheGameRightNow(Long userId);
 }

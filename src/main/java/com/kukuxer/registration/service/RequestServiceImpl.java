@@ -28,6 +28,7 @@ public class RequestServiceImpl implements RequestService {
     private final UserRepository userRepository;
     private final UserService userService;
     private final SearchService searchService;
+
     @Override
     public Request createRequest(Long receiverId, Long senderId) {
         searchService.isPlayingRightNow(senderId);
@@ -73,7 +74,7 @@ public class RequestServiceImpl implements RequestService {
                 throw new IllegalStateException("Request is not ready to accept");
             }
             searchService.isPlayingRightNow(request.getSender().getId());
-            userService.updateUsersInGame(request.getSender(),request.getReceiver());
+            userService.updateUsersInGame(request.getSender(), request.getReceiver());
             request.setStatus(Status.ACCEPTED);
 
             requestRepository.save(request);
@@ -93,10 +94,12 @@ public class RequestServiceImpl implements RequestService {
         }
     }
 
-    private boolean isAcceptableRequest(Request request, Long receiverId) {
+    @Override
+    public boolean isAcceptableRequest(Request request, Long receiverId) {
         return request.getReceiver().getId().equals(receiverId) &&
                 request.getStatus() == Status.PENDING;
     }
+
 
     @Override
     public ResponseEntity<String> rejectRequest(Long requestId, Long userId) {
@@ -117,7 +120,7 @@ public class RequestServiceImpl implements RequestService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found.", e);
         } catch (IllegalStateException e) {
             Sentry.captureException(e);
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         } catch (Exception e) {
             Sentry.captureException(e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred.", e);

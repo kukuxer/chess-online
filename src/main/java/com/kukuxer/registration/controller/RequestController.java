@@ -43,6 +43,19 @@ public class RequestController {
         }
     }
 
+    @PostMapping("/stopSearching")
+    public ResponseEntity<String> stopSearching() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User userSender = userService.getByUsername(authentication.getName());
+        SearchRequest searchRequest = searchService.getCurrentSearch(userSender);
+        if (searchRequest == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("You are not looking for a game right now");
+        } else {
+            searchService.stopSearching(searchRequest);
+            return ResponseEntity.ok("You stop searching for a match!");
+        }
+    }
+
 
     @PostMapping("/send/{receiverId}")
     public ResponseEntity<String> sendRequest(@PathVariable("receiverId") long receiverId) {

@@ -9,7 +9,6 @@ import com.kukuxer.registration.repository.SearchRequestRepository;
 import com.kukuxer.registration.repository.UserRepository;
 import com.kukuxer.registration.repository.UserStatisticRepository;
 import com.kukuxer.registration.service.interfaces.MatchService;
-import com.kukuxer.registration.service.interfaces.RequestService;
 import com.kukuxer.registration.service.interfaces.SearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,8 +31,8 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public SearchRequest checkIfSomeoneWaitingForMe(Long userId) {
-        Optional<SearchRequest> sr = searchRequestRepository.findBySenderIdAndIsWaiting(userId,true);
-        if(sr.isPresent()) throw new RuntimeException("You are already searching for a game.");
+        Optional<SearchRequest> sr = searchRequestRepository.findBySenderIdAndIsWaiting(userId, true);
+        if (sr.isPresent()) throw new RuntimeException("You are already searching for a game.");
         isPlayingRightNow(userId);
         User user = userRepository.findById(userId).orElseThrow();
         UserStatistic userStatistic = userStatisticRepository.findByUser(user).orElseThrow();
@@ -72,8 +71,23 @@ public class SearchServiceImpl implements SearchService {
         searchRequestRepository.save(searchRequest);
     }
     @Override
-    public void isPlayingRightNow(Long userId){
+    public void stopSearching(SearchRequest searchRequest){
+        searchRequest.setWaiting(false);
+        searchRequestRepository.save(searchRequest);
+    }
+
+
+    @Override
+    public void isPlayingRightNow(Long userId) {
         List<Match> match = matchRepository.findBySenderOrReceiverAndEndTimeIsNull(userRepository.findById(userId).orElseThrow());
-        if(!match.isEmpty()) throw new RuntimeException("You are in match. ");
+        if (!match.isEmpty()) throw new RuntimeException("You are in match. ");
+    }
+@Override
+    public SearchRequest getCurrentSearch(User user) {
+        try {
+            return searchRequestRepository.findBySenderIdAndIsWaiting(user.getId(), true).orElseThrow();
+        }catch (Exception e){
+            return null;
+        }
     }
 }

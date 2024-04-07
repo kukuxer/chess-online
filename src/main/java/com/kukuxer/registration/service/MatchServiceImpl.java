@@ -5,7 +5,6 @@ import com.kukuxer.registration.domain.match.Board;
 import com.kukuxer.registration.domain.match.Match;
 import com.kukuxer.registration.domain.match.MatchHistory;
 import com.kukuxer.registration.domain.user.User;
-import com.kukuxer.registration.domain.user.UserStatistic;
 import com.kukuxer.registration.repository.MatchHistoryRepository;
 import com.kukuxer.registration.repository.MatchRepository;
 import com.kukuxer.registration.repository.UserRepository;
@@ -158,6 +157,23 @@ public class MatchServiceImpl implements MatchService {
         }
 
     }
+    @Override
+    public User getOpponent(long userId) {
+
+        User user = userRepository.getById(userId);
+        List<Match> matches = matchRepository.findBySenderOrReceiverAndEndTimeIsNull(user);
+        // Ensure that exactly one match is found
+        if (matches.size() != 1) {
+            throw new EntityNotFoundException("Match not found or ambiguous for user with ID: " + userId);
+        }
+        // Identify the opponent based on the user's role in the match
+        Match match = matches.get(0);
+        if (match.getSender().getId() == userId) {
+            return match.getReceiver();
+        } else {
+            return match.getSender();
+        }
+    }
 
     @Override
     public Match getById(long matchId) {
@@ -168,6 +184,15 @@ public class MatchServiceImpl implements MatchService {
             Sentry.captureException(ex);
             throw ex;
         }
+    }
+    @Override
+    public boolean isInTheGameRightNow(Long userId){
+        List<Match> matches = matchRepository.findBySenderOrReceiverAndEndTimeIsNull(
+                userRepository.findById(userId).orElseThrow());
+        for(Match match : matches){
+            System.out.println(match.getEndTime());
+        }
+        return !matches.isEmpty();
     }
 
 
