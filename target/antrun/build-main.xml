@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="maven-antrun-" default="main">
   <target name="main">
-    <exec output="C:\Users\MYPC~1\AppData\Local\Temp\maven1930710083647011025cli" failOnError="false" executable="cmd.exe">
+    <exec output="C:\Users\porku\AppData\Local\Temp\maven1278252015311130941cli" failOnError="true" executable="cmd.exe">
       <arg value="/c" />
-      <arg value="C:\Users\MYPC~1\AppData\Local\Temp\.sentry-cli10310160688383034409.exe --log-level=error --version" />
+      <arg value="C:\Users\porku\AppData\Local\Temp\.sentry-cli8189275733392147758.exe --log-level=debug --header sentry-trace:d0a0e69d31ac40cdb958a8e0b2b93793-d6753a28804a42c4-1 --header baggage:sentry-environment=JVM,sentry-public_key=000e5dea9770b4537055f8a6d28c021e,sentry-release=0.0.7,sentry-sample_rate=1,sentry-sampled=true,sentry-trace_id=d0a0e69d31ac40cdb958a8e0b2b93793,sentry-transaction=maven%20build debug-files upload --type=jvm --org=aboba-rv --project=java-spring-boot C:\Users\porku\Desktop\MiniProjects\registration\target\sentry\source-bundle" />
     </exec>
   </target>
 </project>
