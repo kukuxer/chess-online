@@ -22,7 +22,7 @@ public class EmailService {
     }
 
     @Async
-    public void sendMailRecoverPasswordTo(String to, String url) {
+    public void sendMailRecoverPasswordTo(String to, String url, String name) {
         try {
             MimeMessage mimeMessage = javaMailSender.createMimeMessage();
 
@@ -32,7 +32,7 @@ public class EmailService {
             mimeMessageHelper.setCc("nazardaun5551@gmail.com");
             mimeMessageHelper.setSubject("Your Recovery password link");
             mimeMessageHelper.setText(
-                    "<h1>click to change your password<h1>" +
+                    "<h1> hi " + name + ", this is your recovery password link<h1>" +
                             "<a href=\"" + url + "\" " +
                             "style=\"display: inline-block; padding: 10px 20px; " +
                             "background-color: #007bff; color: #fff; " +
