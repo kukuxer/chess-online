@@ -77,7 +77,7 @@ public class ApplicationConfig{
                                                     .write("Unauthorized.");
                                         }))
                 .authorizeHttpRequests(configurer ->
-                        configurer.requestMatchers("/auth/**","/v3/api-docs/**","/swagger-ui/**", "/swagger-ui.html")
+                        configurer.requestMatchers("/auth/**","/v3/api-docs/**","/swagger-ui/**", "/swagger-ui.html","/forgotPassword/**")
                                 .permitAll()
                                 .anyRequest().authenticated())
                 .anonymous(AbstractHttpConfigurer::disable)

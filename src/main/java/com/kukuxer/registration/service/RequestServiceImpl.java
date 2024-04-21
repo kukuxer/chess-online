@@ -1,7 +1,7 @@
 package com.kukuxer.registration.service;
 
-import com.kukuxer.registration.domain.request.Request;
-import com.kukuxer.registration.domain.request.Status;
+import com.kukuxer.registration.domain.requests.Request;
+import com.kukuxer.registration.domain.requests.Status;
 import com.kukuxer.registration.domain.user.User;
 import com.kukuxer.registration.repository.RequestRepository;
 import com.kukuxer.registration.repository.UserRepository;

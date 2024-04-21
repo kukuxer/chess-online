@@ -1,6 +1,6 @@
 package com.kukuxer.registration.service;
 
-import com.kukuxer.registration.domain.user.FriendRequest;
+import com.kukuxer.registration.domain.requests.FriendRequest;
 import com.kukuxer.registration.domain.user.Role;
 import com.kukuxer.registration.domain.user.User;
 import com.kukuxer.registration.domain.user.UserStatistic;
@@ -11,12 +11,9 @@ import com.kukuxer.registration.service.interfaces.UserService;
 import io.sentry.Sentry;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -88,6 +85,22 @@ public class UserServiceImpl implements UserService {
             throw e;
         } catch (Exception e) {
             logger.error("Failed to retrieve user by username {}", username, e);
+            Sentry.captureException(e);
+            throw new RuntimeException("Failed to retrieve user. Please try again later.");
+        }
+    }
+    @Override
+    public User getByEmail(String email) {
+        try {
+            return userRepository.findByEmail(email).orElseThrow(
+                    () -> new EntityNotFoundException("User not found with email: " + email)
+            );
+        } catch (EntityNotFoundException e) {
+            logger.error("Failed to retrieve user by email {}: {}", email, e.getMessage());
+            Sentry.captureException(e);
+            throw e;
+        } catch (Exception e) {
+            logger.error("Failed to retrieve user by email {}", email, e);
             Sentry.captureException(e);
             throw new RuntimeException("Failed to retrieve user. Please try again later.");
         }

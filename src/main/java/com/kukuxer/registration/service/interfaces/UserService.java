@@ -1,9 +1,8 @@
 package com.kukuxer.registration.service.interfaces;
 
 
-import com.kukuxer.registration.domain.user.FriendRequest;
+import com.kukuxer.registration.domain.requests.FriendRequest;
 import com.kukuxer.registration.domain.user.User;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -13,6 +12,8 @@ public interface UserService {
     User getById(Long userId);
 
     User getByUsername(String username);
+
+    User getByEmail(String email);
 
     void updateUsersInGame(User user1, User user2);
 

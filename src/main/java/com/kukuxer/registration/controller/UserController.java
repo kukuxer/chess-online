@@ -2,7 +2,7 @@ package com.kukuxer.registration.controller;
 
 
 import com.kukuxer.registration.domain.match.Match;
-import com.kukuxer.registration.domain.user.FriendRequest;
+import com.kukuxer.registration.domain.requests.FriendRequest;
 import com.kukuxer.registration.domain.user.User;
 import com.kukuxer.registration.service.interfaces.MatchService;
 import com.kukuxer.registration.service.interfaces.UserService;
@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

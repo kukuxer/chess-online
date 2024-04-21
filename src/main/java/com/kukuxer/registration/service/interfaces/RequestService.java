@@ -1,7 +1,7 @@
 package com.kukuxer.registration.service.interfaces;
 
 
-import com.kukuxer.registration.domain.request.Request;
+import com.kukuxer.registration.domain.requests.Request;
 import org.springframework.http.ResponseEntity;
 
 public interface RequestService {

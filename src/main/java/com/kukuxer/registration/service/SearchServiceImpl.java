@@ -1,7 +1,7 @@
 package com.kukuxer.registration.service;
 
 import com.kukuxer.registration.domain.match.Match;
-import com.kukuxer.registration.domain.request.SearchRequest;
+import com.kukuxer.registration.domain.requests.SearchRequest;
 import com.kukuxer.registration.domain.user.User;
 import com.kukuxer.registration.domain.user.UserStatistic;
 import com.kukuxer.registration.repository.MatchRepository;

@@ -1,8 +1,7 @@
 package com.kukuxer.registration.service.interfaces;
 
-import com.kukuxer.registration.domain.request.SearchRequest;
+import com.kukuxer.registration.domain.requests.SearchRequest;
 import com.kukuxer.registration.domain.user.User;
-import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 

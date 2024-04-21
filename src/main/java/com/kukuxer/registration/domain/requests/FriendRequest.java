@@ -1,4 +1,4 @@
-package com.kukuxer.registration.domain.user;
+package com.kukuxer.registration.domain.requests;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

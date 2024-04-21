@@ -1,4 +1,4 @@
-package com.kukuxer.registration.domain.request;
+package com.kukuxer.registration.domain.requests;
 
 
 import com.kukuxer.registration.domain.user.User;

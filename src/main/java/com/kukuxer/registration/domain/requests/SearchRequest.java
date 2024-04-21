@@ -1,4 +1,4 @@
-package com.kukuxer.registration.domain.request;
+package com.kukuxer.registration.domain.requests;
 
 import com.kukuxer.registration.domain.user.User;
 import jakarta.persistence.*;
@@ -19,7 +19,7 @@ import java.util.UUID;
 public class SearchRequest {
     @Id
     @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    @GenericGenerator(name = "UUID", strategy = "uuid2")
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 

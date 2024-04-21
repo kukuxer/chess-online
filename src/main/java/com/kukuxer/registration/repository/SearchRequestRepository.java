@@ -1,6 +1,6 @@
 package com.kukuxer.registration.repository;
 
-import com.kukuxer.registration.domain.request.SearchRequest;
+import com.kukuxer.registration.domain.requests.SearchRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
