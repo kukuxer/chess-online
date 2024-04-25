@@ -4,8 +4,7 @@ import com.kukuxer.registration.domain.requests.ForgotPasswordRequest;
 import com.kukuxer.registration.domain.user.User;
 
 public interface ForgotPasswordRequestService {
-
-    void createForgotPasswordRequest(User user);
+    void createForgotPasswordRequest(User user, String ip);
 
     ForgotPasswordRequest getByToken(String token);
 

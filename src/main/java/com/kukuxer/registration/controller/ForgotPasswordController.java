@@ -5,6 +5,7 @@ import com.kukuxer.registration.domain.user.User;
 import com.kukuxer.registration.service.EmailService;
 import com.kukuxer.registration.service.interfaces.ForgotPasswordRequestService;
 import com.kukuxer.registration.service.interfaces.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,19 +22,32 @@ public class ForgotPasswordController {
     private final UserService userService;
 
     @PostMapping("/sendRecoverlinkToEmail")
-    public ResponseEntity<?> forgotPassword(@RequestParam String email) {
+    public ResponseEntity<?> forgotPassword(@RequestHeader String email, HttpServletRequest request) {
         User user = userService.getByEmail(email);
-        forgotPasswordRequestService.createForgotPasswordRequest(user);
+        forgotPasswordRequestService.createForgotPasswordRequest(user,request.getRemoteAddr());
         return ResponseEntity.ok("email sended");
     }
 
-    @PostMapping("/changePassword")
-    public ResponseEntity<?> changePassword(@RequestParam String token,@RequestParam String newPassword) {
+    @PostMapping("/checkToken")
+    public boolean checkToken(@RequestHeader String token) {
+        try {
+            ForgotPasswordRequest request = forgotPasswordRequestService.getByToken(token);
+            if (forgotPasswordRequestService.checkIfRequestLegal(request)) {
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
+
+    @PostMapping("/changePassword")
+    public ResponseEntity<?> changePassword(@RequestParam String token, @RequestParam String newPassword) {
 
         ForgotPasswordRequest request = forgotPasswordRequestService.getByToken(token);
-        if(forgotPasswordRequestService.checkIfRequestLegal(request)){
-            forgotPasswordRequestService.changePassword(request,newPassword);
+        if (forgotPasswordRequestService.checkIfRequestLegal(request)) {
+            forgotPasswordRequestService.changePassword(request, newPassword);
             return ResponseEntity.ok("password successfully changed ");
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Request is not active");

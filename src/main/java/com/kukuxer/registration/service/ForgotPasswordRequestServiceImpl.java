@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
@@ -28,11 +29,15 @@ public class ForgotPasswordRequestServiceImpl implements ForgotPasswordRequestSe
     private final EmailService emailService;
 
     @Override
-    public void createForgotPasswordRequest(User user) {
+    public void createForgotPasswordRequest(User user, String ip) {
+        if(ifUserAlreadySendRequest3minsAgo(ip)){
+            throw new RuntimeException("You already send request last 3 minutes ");
+        }
         String token = generateToken();
         ForgotPasswordRequest request = ForgotPasswordRequest.builder().
                 token(token).
                 createdAt(LocalDateTime.now()).
+                ipAddress(ip).
                 user(user).
                 isActive(true).
                 build();
@@ -41,6 +46,21 @@ public class ForgotPasswordRequestServiceImpl implements ForgotPasswordRequestSe
         String changePasswordUrl = "http://localhost:8080/forgotPassword/changePassword?token=" + token;
         emailService.sendMailRecoverPasswordTo(user.getEmail(), changePasswordUrl, user.getUsername());
     }
+
+    private boolean ifUserAlreadySendRequest3minsAgo(String ip) {
+        try {
+            ForgotPasswordRequest request = forgotPasswordRequestRepository.findNearestByIpAddress(ip).orElseThrow();
+            LocalDateTime threeMinutesAgo = LocalDateTime.now().minus(3, ChronoUnit.MINUTES);
+            if (request.getCreatedAt().isAfter(threeMinutesAgo)) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 
     @Override
     public ForgotPasswordRequest getByToken(String token) {

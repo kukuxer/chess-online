@@ -100,6 +100,7 @@ create table if not exists forgot_password_request
 (
     id         SERIAL PRIMARY KEY,
     user_id    bigint not null,
+    ip_address varchar(255),
     token      varchar(255),
     is_active  boolean,
     created_at timestamp DEFAULT current_timestamp,

@@ -23,6 +23,8 @@ public class ForgotPasswordRequest {
     @JoinColumn(name = "user_id")
     private User user;
 
+    private String ipAddress;
+
     private String token;
 
     private boolean isActive;
