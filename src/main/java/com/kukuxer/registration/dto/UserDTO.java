@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 @Data
 public class UserDTO {
 
-    private Long id;
+    private Long id; // TODO check
     @NotNull(message = "name must be not mull")
     @Length(max = 255, message = "Name length must be shorter than 255 symbols")
     private String username;
