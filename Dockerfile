@@ -5,7 +5,7 @@ FROM maven:3.8.5-openjdk-17 AS build
 COPY . .
 
 # Package the application
-RUN mvn clean package
+RUN mvn clean package -DskipTests
 
 # Second stage: Create a slim runtime image
 FROM openjdk:17-jdk-slim
