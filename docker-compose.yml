@@ -12,7 +12,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgres://chessdb_w4mv_user:8SZ39hj0oazFCg6a8k4UkajHUNSUQJLb@dpg-cpq7a4pu0jms738qkpog-a.frankfurt-postgres.render.com/chessdb_w4mv
+      - SPRING_DATASOURCE_URL=dbc:postgresql://dpg-cpq7a4pu0jms738qkpog-a.frankfurt-postgres.render.com/chessdb_w4mv
       - SPRING_DATASOURCE_USERNAME=chessdb_w4mv_user
       - SPRING_DATASOURCE_PASSWORD=8SZ39hj0oazFCg6a8k4UkajHUNSUQJLb
     depends_on:
