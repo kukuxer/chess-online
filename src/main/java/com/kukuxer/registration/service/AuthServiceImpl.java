@@ -9,6 +9,7 @@ import com.kukuxer.registration.service.interfaces.AuthService;
 import com.kukuxer.registration.service.interfaces.UserService;
 import io.sentry.Sentry;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -38,8 +39,13 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    @Override  // todo
-    public JwtResponse refresh(String refreshToken) {
-        return jwtTokenProvider.refreshUserTokens(refreshToken);
+ @Override
+ @SneakyThrows
+    public JwtResponse refresh(User user) {
+     JwtResponse jwtResponse = new JwtResponse();
+     jwtResponse.setId(user.getId());
+     jwtResponse.setUsername(user.getUsername());
+     jwtResponse.setAccessToken(jwtTokenProvider.createAccessToken(user.getId(), user.getUsername()));
+     return jwtResponse;
     }
 }

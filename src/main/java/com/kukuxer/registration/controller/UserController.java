@@ -4,6 +4,8 @@ package com.kukuxer.registration.controller;
 import com.kukuxer.registration.domain.match.Match;
 import com.kukuxer.registration.domain.requests.FriendRequest;
 import com.kukuxer.registration.domain.user.User;
+import com.kukuxer.registration.security.JwtResponse;
+import com.kukuxer.registration.service.interfaces.AuthService;
 import com.kukuxer.registration.service.interfaces.MatchService;
 import com.kukuxer.registration.service.interfaces.UserService;
 import io.sentry.Sentry;
@@ -24,6 +26,7 @@ public class UserController {
 
     private final MatchService matchService;
     private final UserService userService;
+    private final AuthService authService;
 
     @GetMapping("/whatIsMyUsername")
     public ResponseEntity<String> showUsername() {
@@ -40,6 +43,12 @@ public class UserController {
             Sentry.captureMessage("Failed to get username");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unable to retrieve username");
         }
+    }
+    @PostMapping("/refresh")
+    public JwtResponse refresh(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = userService.getByUsername(authentication.getName());
+        return authService.refresh(user);
     }
 
     @GetMapping("/matches")
