@@ -38,14 +38,12 @@ public class AuthController {
     @PostMapping("/register")
     public UserDTO register(@Validated @RequestBody UserDTO userDto) {
         User createdUser = userMapper.toEntity(userDto);
-        ;
         userService.create(createdUser);
         return userMapper.toDto(createdUser);
     }
 
     @GetMapping("/checkUsername")
-    public boolean checkUsername(@RequestBody Map<String, String> request) {
-        String username = request.get("username");
+    public boolean checkUsername(@RequestParam String username) {
         try {
             return !isNull(userService.getByUsername(username));
         } catch (Exception e) {
@@ -54,8 +52,7 @@ public class AuthController {
     }
 
     @GetMapping("/checkEmail")
-    public boolean checkEmail(@RequestBody Map<String, String> request) {
-        String email = request.get("email");
+    public boolean checkEmail(@RequestParam String email) {
         try {
             return !isNull(userService.getByEmail(email));
         } catch (Exception e) {

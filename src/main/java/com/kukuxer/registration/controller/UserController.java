@@ -90,6 +90,4 @@ public class UserController {
         userService.rejectFriendRequest(requestId);
         return ResponseEntity.status(HttpStatus.OK).body("Successfully rejected the friend request.");
     }
-
-
 }
