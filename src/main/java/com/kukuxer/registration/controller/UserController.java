@@ -31,13 +31,8 @@ public class UserController {
     @GetMapping("/whatIsMyUsername")
     public ResponseEntity<String> showUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof UserDetails) {
-            // If it is, cast it to UserDetails and retrieve the username
-            String principalUsername = ((UserDetails) principal).getUsername();
-            String responseMessage = "Your principalUsername is: " + principalUsername + ", Username: " + username;
-            return ResponseEntity.ok(responseMessage);
+        if (authentication.getPrincipal() instanceof UserDetails) {
+            return ResponseEntity.ok(authentication.getName());
         } else {
             // If it's not a UserDetails object, you might handle it differently based on your application logic
             Sentry.captureMessage("Failed to get username");
