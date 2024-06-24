@@ -13,6 +13,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/forgotPassword")
 @RequiredArgsConstructor
@@ -22,7 +24,8 @@ public class ForgotPasswordController {
     private final UserService userService;
 
     @PostMapping("/sendRecoverlinkToEmail")
-    public ResponseEntity<?> forgotPassword(@RequestHeader String email, HttpServletRequest request) {
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> payload, HttpServletRequest request) {
+        String email = payload.get("email");
         User user = userService.getByEmail(email);
         forgotPasswordRequestService.createForgotPasswordRequest(user,request.getRemoteAddr());
         return ResponseEntity.ok("email sended");
@@ -43,8 +46,8 @@ public class ForgotPasswordController {
 
 
     @PostMapping("/changePassword")
-    public ResponseEntity<?> changePassword(@RequestParam String token, @RequestParam String newPassword) {
-
+    public ResponseEntity<?> changePassword(@RequestParam String token,@RequestBody Map<String, String> payload) {
+        String newPassword = payload.get("newPassword");
         ForgotPasswordRequest request = forgotPasswordRequestService.getByToken(token);
         if (forgotPasswordRequestService.checkIfRequestLegal(request)) {
             forgotPasswordRequestService.changePassword(request, newPassword);
