@@ -12,6 +12,7 @@ import io.sentry.Sentry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,6 +28,7 @@ public class UserController {
     private final MatchService matchService;
     private final UserService userService;
     private final AuthService authService;
+
 
     @GetMapping("/whatIsMyUsername")
     public ResponseEntity<String> showUsername() {

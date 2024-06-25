@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -27,18 +28,16 @@ public class ForgotPasswordController {
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> payload, HttpServletRequest request) {
         String email = payload.get("email");
         User user = userService.getByEmail(email);
-        forgotPasswordRequestService.createForgotPasswordRequest(user,request.getRemoteAddr());
+        forgotPasswordRequestService.createForgotPasswordRequest(user, request.getRemoteAddr());
         return ResponseEntity.ok("email sended");
     }
 
     @PostMapping("/checkToken")
-    public boolean checkToken(@RequestHeader String token) {
+    public boolean checkToken(@RequestBody Map<String, String> payload) {
+        String token = payload.get("token");
         try {
             ForgotPasswordRequest request = forgotPasswordRequestService.getByToken(token);
-            if (forgotPasswordRequestService.checkIfRequestLegal(request)) {
-                return true;
-            }
-            return false;
+            return forgotPasswordRequestService.checkIfRequestLegal(request);
         } catch (Exception e) {
             return false;
         }
@@ -46,7 +45,7 @@ public class ForgotPasswordController {
 
 
     @PostMapping("/changePassword")
-    public ResponseEntity<?> changePassword(@RequestParam String token,@RequestBody Map<String, String> payload) {
+    public ResponseEntity<?> changePassword(@RequestParam String token, @RequestBody Map<String, String> payload) {
         String newPassword = payload.get("newPassword");
         ForgotPasswordRequest request = forgotPasswordRequestService.getByToken(token);
         if (forgotPasswordRequestService.checkIfRequestLegal(request)) {

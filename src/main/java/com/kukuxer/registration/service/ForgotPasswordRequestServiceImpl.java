@@ -10,6 +10,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +30,7 @@ public class ForgotPasswordRequestServiceImpl implements ForgotPasswordRequestSe
     private final EmailService emailService;
 
     @Override
+    @Async
     public void createForgotPasswordRequest(User user, String ip) {
         if(ifUserAlreadySendRequest3minsAgo(ip)){
             throw new RuntimeException("You already send request last 3 minutes ");
@@ -43,7 +45,7 @@ public class ForgotPasswordRequestServiceImpl implements ForgotPasswordRequestSe
                 build();
         forgotPasswordRequestRepository.save(request);
         // change after publishing
-        String changePasswordUrl = "http://localhost:8080/forgotPassword/changePassword?token=" + token;
+        String changePasswordUrl = "http-frontend/?token=" + token;
         emailService.sendMailRecoverPasswordTo(user.getEmail(), changePasswordUrl, user.getUsername());
     }
 
