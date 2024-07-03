@@ -14,7 +14,8 @@ public interface ForgotPasswordRequestRepository extends JpaRepository<ForgotPas
     @Query("SELECT fpr FROM ForgotPasswordRequest fpr " +
             "WHERE fpr.ipAddress = :ipAddress " +
             "AND fpr.createdAt <= CURRENT_TIMESTAMP " +
-            "ORDER BY fpr.createdAt DESC")
+            "ORDER BY fpr.createdAt DESC " +
+            "LIMIT 1")
     Optional<ForgotPasswordRequest> findNearestByIpAddress(@Param("ipAddress") String ipAddress);
 }
 

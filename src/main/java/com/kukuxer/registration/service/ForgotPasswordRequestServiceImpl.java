@@ -8,6 +8,7 @@ import com.kukuxer.registration.service.interfaces.ForgotPasswordRequestService;
 import io.sentry.Sentry;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
@@ -30,9 +31,9 @@ public class ForgotPasswordRequestServiceImpl implements ForgotPasswordRequestSe
     private final EmailService emailService;
 
     @Override
-    @Async
+    @SneakyThrows
     public void createForgotPasswordRequest(User user, String ip) {
-        if(ifUserAlreadySendRequest3minsAgo(ip)){
+        if (ifUserAlreadySendRequest3minsAgo(ip)) {
             throw new RuntimeException("You already send request last 3 minutes ");
         }
         String token = generateToken();
@@ -45,22 +46,15 @@ public class ForgotPasswordRequestServiceImpl implements ForgotPasswordRequestSe
                 build();
         forgotPasswordRequestRepository.save(request);
         // change after publishing
-        String changePasswordUrl = "http-frontend/?token=" + token;
+        String changePasswordUrl = "http://localhost:3000forgotPassword/changePassword/" + token;
         emailService.sendMailRecoverPasswordTo(user.getEmail(), changePasswordUrl, user.getUsername());
     }
 
+    @SneakyThrows
     private boolean ifUserAlreadySendRequest3minsAgo(String ip) {
-        try {
-            ForgotPasswordRequest request = forgotPasswordRequestRepository.findNearestByIpAddress(ip).orElseThrow();
-            LocalDateTime threeMinutesAgo = LocalDateTime.now().minus(3, ChronoUnit.MINUTES);
-            if (request.getCreatedAt().isAfter(threeMinutesAgo)) {
-                return true;
-            } else {
-                return false;
-            }
-        } catch (Exception e) {
-            return false;
-        }
+        ForgotPasswordRequest request = forgotPasswordRequestRepository.findNearestByIpAddress(ip).orElseThrow();
+        LocalDateTime threeMinutesAgo = LocalDateTime.now().minusMinutes(3);
+        return request.getCreatedAt().isAfter(threeMinutesAgo);
     }
 
 
@@ -85,7 +79,7 @@ public class ForgotPasswordRequestServiceImpl implements ForgotPasswordRequestSe
 
     @Override
     public boolean checkIfRequestLegal(ForgotPasswordRequest forgotPasswordRequest) {
-        LocalDateTime fifteenMinutesAgo = LocalDateTime.now().minus(15, ChronoUnit.MINUTES);
+        LocalDateTime fifteenMinutesAgo = LocalDateTime.now().minusMinutes(15);
         if (forgotPasswordRequest.isActive()) {
             if (forgotPasswordRequest.getCreatedAt().isAfter(fifteenMinutesAgo)) {
                 return true;

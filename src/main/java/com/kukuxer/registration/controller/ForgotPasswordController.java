@@ -7,6 +7,7 @@ import com.kukuxer.registration.service.interfaces.ForgotPasswordRequestService;
 import com.kukuxer.registration.service.interfaces.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -44,8 +45,8 @@ public class ForgotPasswordController {
     }
 
 
-    @PostMapping("/changePassword")
-    public ResponseEntity<?> changePassword(@RequestParam String token, @RequestBody Map<String, String> payload) {
+    @PostMapping("/changePassword/{token}")
+    public ResponseEntity<?> changePassword(@PathVariable String token, @RequestBody Map<String, String> payload) {
         String newPassword = payload.get("newPassword");
         ForgotPasswordRequest request = forgotPasswordRequestService.getByToken(token);
         if (forgotPasswordRequestService.checkIfRequestLegal(request)) {
