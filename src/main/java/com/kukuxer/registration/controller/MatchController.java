@@ -2,12 +2,9 @@ package com.kukuxer.registration.controller;
 
 import com.kukuxer.registration.domain.MoveRequest;
 import com.kukuxer.registration.domain.match.Board;
-import com.kukuxer.registration.domain.match.Match;
 import com.kukuxer.registration.domain.user.User;
-import com.kukuxer.registration.domain.user.UserStatistic;
+import com.kukuxer.registration.service.UserServiceImpl;
 import com.kukuxer.registration.service.interfaces.MatchService;
-import com.kukuxer.registration.service.interfaces.SearchService;
-import com.kukuxer.registration.service.interfaces.UserService;
 import com.kukuxer.registration.service.interfaces.UserStatistics;
 import io.sentry.Sentry;
 import lombok.RequiredArgsConstructor;
@@ -17,15 +14,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-
 @RestController
 @RequestMapping("/match")
 @RequiredArgsConstructor
 public class MatchController {
 
-    private final UserService userService;
+    private final UserServiceImpl userService;
     private final MatchService matchService;
     private final UserStatistics userStatistics;
 

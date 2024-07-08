@@ -3,12 +3,12 @@ package com.kukuxer.registration.service;
 import com.kukuxer.registration.domain.requests.Request;
 import com.kukuxer.registration.domain.requests.Status;
 import com.kukuxer.registration.domain.user.User;
+import com.kukuxer.registration.repository.MatchRepository;
 import com.kukuxer.registration.repository.RequestRepository;
 import com.kukuxer.registration.repository.UserRepository;
 import com.kukuxer.registration.service.interfaces.MatchService;
 import com.kukuxer.registration.service.interfaces.RequestService;
 import com.kukuxer.registration.service.interfaces.SearchService;
-import com.kukuxer.registration.service.interfaces.UserService;
 import io.sentry.Sentry;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +26,9 @@ public class RequestServiceImpl implements RequestService {
     private final MatchService matchService;
     private final RequestRepository requestRepository;
     private final UserRepository userRepository;
-    private final UserService userService;
+    private final UserServiceImpl userService;
     private final SearchService searchService;
+    private final MatchRepository matchRepository;
 
     @Override
     public Request createRequest(Long receiverId, Long senderId) {

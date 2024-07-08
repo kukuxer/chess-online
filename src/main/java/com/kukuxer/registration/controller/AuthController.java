@@ -6,17 +6,12 @@ import com.kukuxer.registration.dto.mappers.UserMapper;
 
 import com.kukuxer.registration.security.JwtRequest;
 import com.kukuxer.registration.security.JwtResponse;
+import com.kukuxer.registration.service.UserServiceImpl;
 import com.kukuxer.registration.service.interfaces.AuthService;
-import com.kukuxer.registration.service.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Collections;
-import java.util.Map;
 
 import static java.util.Objects.isNull;
 
@@ -27,7 +22,7 @@ import static java.util.Objects.isNull;
 public class AuthController {
 
     private final AuthService authService;
-    private final UserService userService;
+    private final UserServiceImpl userService;
     private final UserMapper userMapper;
 
 

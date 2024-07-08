@@ -1,30 +1,31 @@
 package com.kukuxer.registration.controller;
 
 
+import com.kukuxer.registration.domain.match.Match;
 import com.kukuxer.registration.domain.requests.SearchRequest;
 import com.kukuxer.registration.domain.user.User;
+import com.kukuxer.registration.service.UserServiceImpl;
+import com.kukuxer.registration.service.interfaces.MatchService;
 import com.kukuxer.registration.service.interfaces.RequestService;
 import com.kukuxer.registration.service.interfaces.SearchService;
-import com.kukuxer.registration.service.interfaces.UserService;
 import io.sentry.Sentry;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/requests")
 @RequiredArgsConstructor
 public class RequestController {
 
-    private final UserService userService;
+    private final UserServiceImpl userService;
     private final RequestService requestService;
     private final SearchService searchService;
+    private final MatchService matchService;
 
 
     @PostMapping("/search")
@@ -93,5 +94,19 @@ public class RequestController {
         User user = userService.getByUsername(authentication.getName());
         requestService.rejectRequest(requestId, user.getId());
         return ResponseEntity.ok("Request rejected successfully.");
+    }
+
+    @GetMapping("/checkStatus")
+    public ResponseEntity<?> CheckStatus() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = userService.getByUsername(authentication.getName());
+
+        try {
+            Match match = matchService.getCurrentMatchByUser(user);
+            if (match == null) return ResponseEntity.status(HttpStatus.CONFLICT).body("No match found for user.");
+            return ResponseEntity.ok(match);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(409).body("No match found for user.");
+        }
     }
 }

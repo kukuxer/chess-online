@@ -2,7 +2,7 @@ package com.kukuxer.registration.security;
 
 
 import com.kukuxer.registration.domain.user.User;
-import com.kukuxer.registration.service.interfaces.UserService;
+import com.kukuxer.registration.service.UserServiceImpl;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -28,7 +28,7 @@ public class JwtTokenProvider {
 
     private final JwtProperties jwtProperties;
     private final UserDetailsService userDetailsService;
-    private final UserService userService;
+    private final UserServiceImpl userService;
     private SecretKey key;
     @PostConstruct
     public void init(){

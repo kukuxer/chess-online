@@ -10,4 +10,5 @@ import java.util.Optional;
 @Repository
 public interface UserStatisticRepository extends JpaRepository<UserStatistic,Long> {
     Optional<UserStatistic> findByUser(User user);
+
 }

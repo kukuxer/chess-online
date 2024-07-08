@@ -2,17 +2,12 @@ package com.kukuxer.registration.controller;
 
 import com.kukuxer.registration.domain.requests.ForgotPasswordRequest;
 import com.kukuxer.registration.domain.user.User;
-import com.kukuxer.registration.service.EmailService;
+import com.kukuxer.registration.service.UserServiceImpl;
 import com.kukuxer.registration.service.interfaces.ForgotPasswordRequestService;
-import com.kukuxer.registration.service.interfaces.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -23,7 +18,7 @@ import java.util.Map;
 public class ForgotPasswordController {
 
     private final ForgotPasswordRequestService forgotPasswordRequestService;
-    private final UserService userService;
+    private final UserServiceImpl userService;
 
     @PostMapping("/sendRecoverlinkToEmail")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> payload, HttpServletRequest request) {
@@ -45,9 +40,11 @@ public class ForgotPasswordController {
     }
 
 
-    @PostMapping("/changePassword/{token}")
-    public ResponseEntity<?> changePassword(@PathVariable String token, @RequestBody Map<String, String> payload) {
+    @PostMapping("/changePassword")
+    public ResponseEntity<?> changePassword(@RequestBody Map<String, String> payload) {
         String newPassword = payload.get("newPassword");
+        String token = payload.get("token");
+
         ForgotPasswordRequest request = forgotPasswordRequestService.getByToken(token);
         if (forgotPasswordRequestService.checkIfRequestLegal(request)) {
             forgotPasswordRequestService.changePassword(request, newPassword);

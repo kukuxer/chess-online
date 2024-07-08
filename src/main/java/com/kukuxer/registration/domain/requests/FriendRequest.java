@@ -15,9 +15,12 @@ import lombok.NoArgsConstructor;
 public class FriendRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="friend_request_id")
+    @Column(name = "id")
     private Long friendRequestId;
+    @Column(name = "sender_id")
     private Long senderId;
+    @Column(name = "receiver_id")
     private Long receiverId;
+    @Column(name = "status")
     private String status;
 }

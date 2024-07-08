@@ -14,6 +14,7 @@ import com.kukuxer.registration.service.interfaces.UserStatistics;
 import io.sentry.Sentry;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -49,7 +50,10 @@ public class MatchServiceImpl implements MatchService {
             match.setSender(sender);
             match.setReceiver(receiver);
             match.setStartTime(LocalDateTime.now());
-            // randomly sets white player
+
+            sender.setInGame(true);
+            receiver.setInGame(true);
+
             Random random = new Random();
             if (random.nextBoolean()) {
                 match.setWhiteUser(sender);
@@ -58,6 +62,7 @@ public class MatchServiceImpl implements MatchService {
             }
 
             matchRepository.save(match);
+            userRepository.saveAll(List.of(sender, receiver));
 
             MatchHistory matchHistory = new MatchHistory();
             matchHistory.setMatch(match);
@@ -66,9 +71,7 @@ public class MatchServiceImpl implements MatchService {
 
             return ResponseEntity.ok("Match created successfully.");
         } catch (Exception e) {
-            // Log the exception to Sentry.io
             Sentry.captureException(e);
-            // Return an appropriate error response
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to create match. Please try again later.");
         }
@@ -98,10 +101,10 @@ public class MatchServiceImpl implements MatchService {
     @Override
     public ResponseEntity<?> makeMove(long matchId,
                                       User user,
-                                     String board,
+                                      String board,
                                       int finishResult) {
         Match match = matchRepository.findById(matchId).orElseThrow();
-        if(match.getWinner()!=null){
+        if (match.getWinner() != null) {
             throw new RuntimeException("Match is finished.");
         }
         try {
@@ -109,24 +112,24 @@ public class MatchServiceImpl implements MatchService {
             if (lastMove == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Match not found");
             }
-            int moveNumber =lastMove.getMoveNumber();
+            int moveNumber = lastMove.getMoveNumber();
             User currentUser;
             String color;
-            if(moveNumber%2==0){
-                currentUser= match.getWhiteUser();
+            if (moveNumber % 2 == 0) {
+                currentUser = match.getWhiteUser();
                 color = "white";
-            }else{
+            } else {
 
-                currentUser=match.getBlack();
+                currentUser = match.getBlack();
                 color = "black";
             }
-            if(currentUser!=user){
-                throw new RuntimeException("you are not "+color);
+            if (currentUser != user) {
+                throw new RuntimeException("you are not " + color);
             }
 
             MatchHistory newMove = MatchHistory.builder()
                     .match(lastMove.getMatch())
-                    .moveNumber(lastMove.getMoveNumber()+1)
+                    .moveNumber(lastMove.getMoveNumber() + 1)
                     .moveTimestamp(LocalDateTime.now())
                     .user(user)
                     .board(board)
@@ -137,7 +140,7 @@ public class MatchServiceImpl implements MatchService {
                 case 0:
                     break;
                 case 1:
-                    userStatistics.updateWinRating(matchId,user);
+                    userStatistics.updateWinRating(matchId, user);
                     break;
                 case 2:
                     userStatistics.updateStalemateRating(matchId);
@@ -146,17 +149,16 @@ public class MatchServiceImpl implements MatchService {
                     throw new RuntimeException("wrong finish result!");
             }
             return ResponseEntity.ok("Move successful");
-        }
-        catch (RuntimeException e) {
+        } catch (RuntimeException e) {
             Sentry.captureException(e);
             throw new RuntimeException(e.getMessage());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             Sentry.captureException(e);
             throw new RuntimeException("Error occurred while making the move.");
         }
 
     }
+
     @Override
     public User getOpponent(long userId) {
 
@@ -185,11 +187,12 @@ public class MatchServiceImpl implements MatchService {
             throw ex;
         }
     }
+
     @Override
-    public boolean isInTheGameRightNow(Long userId){
+    public boolean isInTheGameRightNow(Long userId) {
         List<Match> matches = matchRepository.findBySenderOrReceiverAndEndTimeIsNull(
                 userRepository.findById(userId).orElseThrow());
-        for(Match match : matches){
+        for (Match match : matches) {
             System.out.println(match.getEndTime());
         }
         return !matches.isEmpty();
@@ -259,5 +262,19 @@ public class MatchServiceImpl implements MatchService {
             }
         }
         return chessboard;
+    }
+
+    @SneakyThrows
+    @Override
+    public Match getCurrentMatchByUser(User user) {
+        if (user.isInGame()) {
+            return matchRepository.findBySenderIdOrReceiverIdOrWhiteUserIdAndEndTimeIsNull(user.getId()
+                            , user.getId()
+                            , user.getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Request not found with ID: " + user.getId()));
+        } else {
+            return null;
+        }
+
     }
 }

@@ -6,7 +6,6 @@ import com.kukuxer.registration.security.JwtRequest;
 import com.kukuxer.registration.security.JwtResponse;
 import com.kukuxer.registration.security.JwtTokenProvider;
 import com.kukuxer.registration.service.interfaces.AuthService;
-import com.kukuxer.registration.service.interfaces.UserService;
 import io.sentry.Sentry;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -19,7 +18,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
-    private final UserService userService;
+    private final UserServiceImpl userService;
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override

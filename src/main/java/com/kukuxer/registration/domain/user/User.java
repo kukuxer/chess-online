@@ -48,7 +48,7 @@ public class User {
     @Enumerated(value = EnumType.STRING)
     private Set<Role> roles;
 
-
+    @JsonIgnore
     @OneToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "users_friends",

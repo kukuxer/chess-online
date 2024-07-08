@@ -1,13 +1,14 @@
 package com.kukuxer.registration.service;
 
 import com.kukuxer.registration.domain.requests.FriendRequest;
+import com.kukuxer.registration.domain.requests.Request;
 import com.kukuxer.registration.domain.user.Role;
 import com.kukuxer.registration.domain.user.User;
 import com.kukuxer.registration.domain.user.UserStatistic;
 import com.kukuxer.registration.repository.FriendRequestRepository;
+import com.kukuxer.registration.repository.RequestRepository;
 import com.kukuxer.registration.repository.UserRepository;
 import com.kukuxer.registration.repository.UserStatisticRepository;
-import com.kukuxer.registration.service.interfaces.UserService;
 import io.sentry.Sentry;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -24,15 +25,16 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl {
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserStatisticRepository userStatisticRepository;
     private final FriendRequestRepository friendRequestRepository;
+    private final RequestRepository requestRepository;
 
-    @Override
+
     @Transactional
     public User create(User user) {
         try {
@@ -56,7 +58,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    @Override
+
     public User getById(Long id) {
         try {
             return userRepository.findById(id).orElseThrow(
@@ -73,7 +75,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    @Override
+
     public User getByUsername(String username) {
         try {
             return userRepository.findByUsername(username).orElseThrow(
@@ -89,7 +91,7 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Failed to retrieve user. Please try again later.");
         }
     }
-    @Override
+
     public User getByEmail(String email) {
         try {
             return userRepository.findByEmail(email).orElseThrow(
@@ -106,7 +108,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    @Override
+
     public void updateUsersInGame(User user1, User user2) {
         if (user1.isInGame() != user2.isInGame()) {
             throw new RuntimeException("готовил пшеницу.");
@@ -117,7 +119,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user2);
     }
 
-    @Override
+
     @Transactional
     public void createStatistic(User user) {
         UserStatistic userStatistic = UserStatistic.builder()
@@ -143,20 +145,19 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    @Override
     public FriendRequest sendFriendRequest(Long userId, Long senderId) {
         if (userId.equals(senderId)) throw new RuntimeException("You can not send a friend request to yourself.");
         boolean isPresent = friendRequestRepository.findFriendRequestBySenderIdAndReceiverId(senderId, userId)
                 .isPresent();
-        if (isPresent){
+        if (isPresent) {
             throw new RuntimeException("You cannot send request twice to one user");
         }
-        List<FriendRequest> friendRequests = getAllBySenderId(userId);
-        for (FriendRequest fR : friendRequests){
-            if(fR.getReceiverId().equals(senderId)){
+        List<FriendRequest> friendRequests = getAllFriendRequestBySenderId(userId);
+        for (FriendRequest fR : friendRequests) {
+            if (fR.getReceiverId().equals(senderId)) {
                 acceptFriendRequest(fR.getFriendRequestId());
             }
-           return fR ;
+            return fR;
         }
         FriendRequest friendRequest = FriendRequest.builder()
                 .senderId(senderId)
@@ -167,7 +168,6 @@ public class UserServiceImpl implements UserService {
         return friendRequest;
     }
 
-    @Override
     public void acceptFriendRequest(Long friendRequestId) {
         FriendRequest friendRequest = findFriendRequestById(friendRequestId);
         if (friendRequest.getStatus().equals("PENDING")) {
@@ -186,7 +186,6 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    @Override
     public void rejectFriendRequest(Long friendRequestId) {
         FriendRequest friendRequest = findFriendRequestById(friendRequestId);
         if (friendRequest.getStatus().equals("PENDING")) {
@@ -197,21 +196,28 @@ public class UserServiceImpl implements UserService {
         friendRequestRepository.save(friendRequest);
     }
 
-    @Override
     public FriendRequest findFriendRequestById(Long friendRequestId) {
         return friendRequestRepository.findById(friendRequestId).orElseThrow(
                 () -> new RuntimeException("Could not find friend request with id " + friendRequestId)
         );
     }
 
-    @Override
-    public List<FriendRequest> getAllByReceiverId(Long receiverId) {
+    public List<FriendRequest> getAllFriendRequestByReceiverId(Long receiverId) {
         return friendRequestRepository.findAllByReceiverId(receiverId);
     }
 
-    @Override
-    public List<FriendRequest> getAllBySenderId(Long senderId) {
+
+    public List<FriendRequest> getAllFriendRequestBySenderId(Long senderId) {
         return friendRequestRepository.findAllBySenderId(senderId);
+    }
+
+    public List<Request> getAllRequestByReceiverId(Long receiverId) {
+        return requestRepository.findAllByReceiverId(receiverId);
+    }
+
+
+    public List<Request> getAllRequestBySenderId(Long senderId) {
+        return requestRepository.findAllBySenderId(senderId);
     }
 
 }

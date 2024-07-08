@@ -1,5 +1,6 @@
 package com.kukuxer.registration.domain.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,7 +19,7 @@ public class UserStatistic {
     private Long id;
 
     @OneToOne
-    @JoinColumn( name = "user_id")
+    @JoinColumn(name = "user_id")
     private User user;
 
     @Column(name = "total_games_played")
@@ -32,5 +33,6 @@ public class UserStatistic {
 
     private int rating;
 
+    @JsonIgnore
     private double confidence;
 }

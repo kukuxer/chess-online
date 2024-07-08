@@ -3,6 +3,7 @@ package com.kukuxer.registration.service.interfaces;
 import com.kukuxer.registration.domain.match.Board;
 import com.kukuxer.registration.domain.match.Match;
 import com.kukuxer.registration.domain.user.User;
+import lombok.SneakyThrows;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
@@ -25,4 +26,8 @@ public interface MatchService {
 
 
     boolean isInTheGameRightNow(Long userId);
+
+
+    @SneakyThrows
+    Match getCurrentMatchByUser(User user);
 }

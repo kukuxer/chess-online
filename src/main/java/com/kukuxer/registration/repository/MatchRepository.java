@@ -17,4 +17,6 @@ public interface MatchRepository extends JpaRepository<Match,Long> {
 
     @Query("SELECT m FROM Match m WHERE (m.sender = :user OR m.receiver = :user) AND m.endTime IS NULL")
     List<Match> findBySenderOrReceiverAndEndTimeIsNull(User user);
+
+    Optional<Match> findBySenderIdOrReceiverIdOrWhiteUserIdAndEndTimeIsNull(Long senderId, Long receiverId, Long whiteUserId);
 }

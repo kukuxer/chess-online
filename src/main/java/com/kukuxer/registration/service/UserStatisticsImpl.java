@@ -6,7 +6,6 @@ import com.kukuxer.registration.domain.user.UserStatistic;
 import com.kukuxer.registration.repository.MatchRepository;
 import com.kukuxer.registration.repository.UserRepository;
 import com.kukuxer.registration.repository.UserStatisticRepository;
-import com.kukuxer.registration.service.interfaces.UserService;
 import com.kukuxer.registration.service.interfaces.UserStatistics;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,7 +19,7 @@ public class UserStatisticsImpl implements UserStatistics {
     private final MatchRepository matchRepository;
     private final UserStatisticRepository userStatisticRepository;
     private final UserRepository userRepository;
-    private final UserService userService;
+    private final UserServiceImpl userService;
     @Override
     public void updateWinRating(Long matchId, User winner) {
         Match match = matchRepository.findById(matchId)

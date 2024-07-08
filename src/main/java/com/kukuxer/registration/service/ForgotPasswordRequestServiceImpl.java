@@ -31,7 +31,6 @@ public class ForgotPasswordRequestServiceImpl implements ForgotPasswordRequestSe
     private final EmailService emailService;
 
     @Override
-    @SneakyThrows
     public void createForgotPasswordRequest(User user, String ip) {
         if (ifUserAlreadySendRequest3minsAgo(ip)) {
             throw new RuntimeException("You already send request last 3 minutes ");
@@ -46,14 +45,16 @@ public class ForgotPasswordRequestServiceImpl implements ForgotPasswordRequestSe
                 build();
         forgotPasswordRequestRepository.save(request);
         // change after publishing
-        String changePasswordUrl = "http://localhost:3000forgotPassword/changePassword/" + token;
+        String changePasswordUrl = "http://localhost:3000/forgotPassword/changePassword/" + token;
         emailService.sendMailRecoverPasswordTo(user.getEmail(), changePasswordUrl, user.getUsername());
     }
 
-    @SneakyThrows
     private boolean ifUserAlreadySendRequest3minsAgo(String ip) {
-        ForgotPasswordRequest request = forgotPasswordRequestRepository.findNearestByIpAddress(ip).orElseThrow();
-        LocalDateTime threeMinutesAgo = LocalDateTime.now().minusMinutes(3);
+        ForgotPasswordRequest request = forgotPasswordRequestRepository.findNearestByIpAddress(ip).orElse(null);
+        if (request == null) {
+            return false; // Or handle it based on your application's logic
+        }
+        LocalDateTime threeMinutesAgo = LocalDateTime.now().minusSeconds(10);
         return request.getCreatedAt().isAfter(threeMinutesAgo);
     }
 
